@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="preload" as="image" href="img/ending.png">
+<title>Big Money Rustlas</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; touch-action:none; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Trebuchet MS','Segoe UI',sans-serif; }
+  #game { position:fixed; inset:0; width:100%; height:100%; display:block; }
+
+  .hud-btn {
+    position:fixed; z-index:20; border:none; border-radius:14px;
+    background:rgba(20,24,38,.62); color:#fff; font-weight:800;
+    font-size:15px; padding:10px 14px; backdrop-filter:blur(4px);
+    border:2px solid rgba(255,255,255,.25); display:none;
+  }
+  .hud-btn:active { background:rgba(255,255,255,.25); }
+  #btnSwitch { right:12px; bottom:14px; font-size:24px; padding:10px 16px; }
+  #btnPause  { right:12px; top:12px; padding:8px 14px; font-size:18px; }
+  #btnMute   { right:64px; top:12px; padding:8px 14px; font-size:18px; }
+
+  #charRow { display:flex; gap:10px; justify-content:center; flex-wrap:nowrap; margin:16px 0 8px; overflow-x:auto; max-width:98vw; padding-bottom:6px; -webkit-overflow-scrolling:touch; }
+  .char-card {
+    width:132px; min-width:132px; border-radius:18px; padding:12px 8px 14px; cursor:pointer;
+    background:rgba(255,255,255,.07); border:3px solid rgba(255,255,255,.15);
+    transition:transform .1s, border-color .15s, background .15s; text-align:center;
+  }
+  .char-card:active { transform:scale(.97); }
+  .char-card.selected { border-color:#ffd54a; background:rgba(255,213,74,.14); }
+  .char-card.locked { opacity:.7; }
+  .char-card.kikr { background:linear-gradient(160deg, rgba(255,213,74,.18), rgba(255,140,0,.1)); border-color:rgba(255,200,60,.5); }
+  .char-card.kikr.selected { border-color:#ffd54a; box-shadow:0 0 18px rgba(255,200,60,.6); }
+  .char-card canvas { width:96px; height:120px; display:block; margin:0 auto 6px; image-rendering:auto; }
+  .char-card .cname { font-weight:900; font-size:18px; color:#fff; }
+  .char-card .cdesc { font-size:12px; color:#bcd; margin-top:2px; min-height:30px; }
+
+  .screen {
+    position:fixed; inset:0; z-index:30; display:none;
+    flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(8,12,24,.86); color:#fff; text-align:center;
+    padding:18px 18px 28px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  .screen.show { display:flex; }
+  /* keep content vertically centered but allow scroll when it overflows */
+  .screen > * { flex-shrink:0; }
+  .btn-row { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:4px; max-width:96vw; }
+  .title-big { font-size:min(9vw,52px); font-weight:900; letter-spacing:1px;
+    color:#ffd54a; text-shadow:0 3px 0 #b35a00, 0 6px 14px rgba(0,0,0,.6); margin-bottom:6px; }
+  .subtitle { font-size:15px; color:#cfe3ff; margin-bottom:18px; }
+  .menu-btn {
+    border:none; border-radius:16px; font-weight:900; font-size:17px;
+    padding:11px 22px; margin:6px; color:#3a2200; cursor:pointer;
+    background:linear-gradient(#ffe082,#ffb300); box-shadow:0 4px 0 #9c6b00;
+  }
+  .menu-btn.secondary { background:linear-gradient(#b3e5fc,#4fc3f7); box-shadow:0 4px 0 #0277bd; color:#04293f; }
+  .menu-btn:active { transform:translateY(3px); box-shadow:0 1px 0 #9c6b00; }
+
+  #levelGrid { position:absolute; inset:0; pointer-events:none; }
+  .lvlhit {
+    position:absolute; width:18%; height:22%; transform:translate(-50%,-50%);
+    background:transparent; border:none; pointer-events:auto; cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px;
+  }
+  .lvlhit:active { transform:translate(-50%,-50%) scale(.95); }
+  .lvlhit.locked { cursor:not-allowed; }
+  .lvllock { font-size:30px; filter:drop-shadow(0 2px 3px #000); }
+  .lvlhere {
+    font-size:13px; font-weight:900; color:#fff; background:rgba(40,160,60,.92);
+    padding:3px 10px; border-radius:8px; border:2px solid #8effa0;
+    box-shadow:0 2px 6px rgba(0,0,0,.5); animation:pulseHere 1s ease-in-out infinite;
+  }
+  @keyframes pulseHere { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+  .lvl.theme1{background:#0288d1}.lvl.theme2{background:#43a047}.lvl.theme3{background:#2e7d32}
+  .lvl.theme4{background:#5c6bc0}.lvl.theme5{background:#d84315}
+  .lvl.boss { outline:3px solid #ffd54a; }
+
+  #shopList { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; max-width:640px; margin:10px 0; }
+  .shop-item {
+    width:150px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.2);
+    border-radius:14px; padding:10px; font-size:13px;
+  }
+  .shop-item .ic { font-size:30px; }
+  .shop-item .nm { font-weight:900; margin:4px 0; }
+  .shop-item .ds { color:#bcd; min-height:40px; }
+  .shop-item button {
+    margin-top:6px; border:none; border-radius:10px; padding:7px 12px; font-weight:900;
+    background:#ffd54a; color:#3a2200; width:100%;
+  }
+  .shop-item button:disabled { background:#546e7a; color:#cfd8dc; }
+  .coin-balance { font-size:18px; font-weight:900; color:#ffd54a; margin-bottom:6px; }
+
+  #toast {
+    position:fixed; left:50%; top:16%; transform:translateX(-50%); z-index:40;
+    background:rgba(10,14,26,.85); color:#ffe082; font-weight:900; font-size:17px;
+    padding:10px 22px; border-radius:14px; border:2px solid rgba(255,213,74,.5);
+    opacity:0; transition:opacity .25s; pointer-events:none;
+  }
+  #hint {
+    position:fixed; left:50%; bottom:10px; transform:translateX(-50%); z-index:15;
+    color:rgba(255,255,255,.85); font-size:13px; font-weight:700;
+    text-shadow:0 1px 3px #000; pointer-events:none; display:none; text-align:center;
+  }
+
+  /* ===== on-screen gamepad ===== */
+  #gamepad { position:fixed; inset:0; z-index:18; display:none; pointer-events:none; }
+  #gamepad .gp { position:absolute; pointer-events:auto; -webkit-user-select:none; user-select:none;
+    display:flex; align-items:center; justify-content:center; font-weight:900; color:#fff;
+    background:rgba(20,24,38,.42); border:2px solid rgba(255,255,255,.3);
+    backdrop-filter:blur(3px); box-shadow:0 2px 8px rgba(0,0,0,.35); transition:background .05s, transform .05s;
+  }
+  #gamepad .gp.pressed { background:rgba(255,255,255,.42); transform:scale(.94); }
+  /* D-pad bottom-left */
+  #dpad { position:absolute; left:18px; bottom:20px; width:186px; height:186px; pointer-events:none; }
+  #dpad .gp { width:60px; height:60px; border-radius:14px; font-size:30px; }
+  #btnL { left:0;   top:63px; }
+  #btnR { left:126px; top:63px; }
+  #btnU { left:63px; top:0; }
+  #btnD { left:63px; top:126px; }
+  /* A / B bottom-right */
+  #btnA, #btnB { width:88px; height:88px; border-radius:50%; font-size:34px; bottom:34px; }
+  #btnB { right:26px; bottom:96px; background:rgba(220,60,110,.5); border-color:rgba(255,150,190,.7); }
+  #btnY { width:74px; height:74px; border-radius:50%; font-size:28px; right:128px; bottom:118px; background:rgba(255,170,40,.5); border-color:rgba(255,210,130,.8); }
+  #btnA { right:120px; bottom:30px; background:rgba(70,150,255,.5); border-color:rgba(170,210,255,.7); }
+  #btnA .lbl, #btnB .lbl, #btnY .lbl { font-size:26px; font-weight:900; }
+  #btnB .sub, #btnY .sub { position:absolute; bottom:-2px; font-size:9px; opacity:.85; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<button id="btnSwitch" class="hud-btn" title="Switch character">🐶</button>
+<button id="btnPause" class="hud-btn">⏸</button>
+<button id="btnMute" class="hud-btn">🔊</button>
+<div id="toast"></div>
+<div id="hint"></div>
+
+<!-- simulated rewarded-ad overlay (web fallback; native uses AdMob) -->
+<div id="adOverlay" style="position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(4,6,14,.95);color:#fff;text-align:center">
+  <div style="font-size:20px;font-weight:900;color:#ffd54a;margin-bottom:8px">🎬 Advertisement</div>
+  <div style="font-size:14px;color:#bcd;margin-bottom:18px">Your reward unlocks in <span id="adCount">3</span>…</div>
+  <div style="width:220px;height:124px;border-radius:14px;background:linear-gradient(135deg,#283593,#7c5cff);display:flex;align-items:center;justify-content:center;font-size:40px;border:2px solid rgba(255,255,255,.25)">🍬</div>
+</div>
+
+<!-- on-screen gamepad -->
+<div id="gamepad">
+  <div id="dpad">
+    <div class="gp" id="btnU">▲</div>
+    <div class="gp" id="btnL">◀</div>
+    <div class="gp" id="btnR">▶</div>
+    <div class="gp" id="btnD">▼</div>
+  </div>
+  <div class="gp" id="btnY"><span class="lbl">Y</span><span class="sub">SLAP</span></div>
+  <div class="gp" id="btnB"><span class="lbl">B</span><span class="sub">SHOOT</span></div>
+  <div class="gp" id="btnA"><span class="lbl">A</span></div>
+</div>
+
+<!-- Title (full-screen key art; tap anywhere to start — handler wired in game.js) -->
+<div id="scrTitle" class="screen show" style="padding:0; background:#1a0e0a url('img/title.png') center/cover no-repeat;">
+  <button class="menu-btn" id="btnPlay" style="display:none">PLAY</button>
+  <button class="menu-btn secondary" id="btnShopFromTitle" style="display:none">🛒 SHOP</button>
+</div>
+
+<!-- Character select -->
+<div id="scrChar" class="screen">
+  <div class="title-big" style="font-size:30px">PICK YOUR HERO</div>
+  <div id="charRow"></div>
+  <div class="btn-row">
+    <button class="menu-btn" id="btnCharGo">LET'S GO!</button>
+    <button class="menu-btn secondary" id="btnCharBack">BACK</button>
+  </div>
+</div>
+
+<!-- Level select -->
+<div id="scrLevels" class="screen" style="padding:0; background:#0a0616 url('img/chapterselect.png') center/cover no-repeat;">
+  <div class="title-big" style="display:none">CHAPTERS</div>
+  <div class="subtitle" id="levelHeroLine" style="display:none"></div>
+  <div id="levelGrid"></div>
+  <div class="btn-row" style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%); z-index:5">
+    <button class="menu-btn secondary" id="btnChangeHero">↩ TITLE</button>
+    <button class="menu-btn secondary" id="btnShopFromLevels">🛒 SHOP</button>
+  </div>
+</div>
+
+<!-- Story card (shown before each chapter) -->
+<div id="scrStory" class="screen">
+  <div class="title-big" id="storyTitle" style="font-size:26px;max-width:680px">Chapter</div>
+  <div class="subtitle" id="storyText" style="max-width:620px;font-size:16px;line-height:1.5"></div>
+  <button class="menu-btn" id="btnStoryGo">CONTINUE ▶</button>
+</div>
+
+<!-- Shop -->
+<div id="scrShop" class="screen">
+  <div class="title-big" style="font-size:30px">ITEM SHOP</div>
+  <div class="coin-balance">🪙 <span id="shopCoins">0</span></div>
+  <div id="shopList"></div>
+  <button class="menu-btn secondary" id="btnShopBack">BACK</button>
+</div>
+
+<!-- Pause -->
+<div id="scrPause" class="screen">
+  <div class="title-big" style="font-size:30px">PAUSED</div>
+  <button class="menu-btn" id="btnResume">RESUME</button>
+  <button class="menu-btn secondary" id="btnRestart">RESTART LEVEL</button>
+  <button class="menu-btn secondary" id="btnQuit">LEVEL SELECT</button>
+</div>
+
+<!-- Level complete -->
+<!-- Level complete (full-screen art; tap anywhere to continue) -->
+<div id="scrWin" class="screen" style="padding:0; background:#0a0616 url('img/levelclear.png') center/cover no-repeat; cursor:pointer;">
+  <div class="subtitle" id="winStats" style="display:none"></div>
+  <button class="menu-btn" id="btnNext" style="display:none">NEXT</button>
+  <button class="menu-btn secondary" id="btnWinLevels" style="display:none">LEVELS</button>
+</div>
+
+<!-- Game finished -->
+<div id="scrEnd" class="screen" style="padding:0; background:#0a0616 url('img/ending.png') center/contain no-repeat; cursor:pointer;">
+  <div class="subtitle" id="endExtra" style="position:absolute; bottom:60px; left:50%; transform:translateX(-50%); color:#ffd54a; font-weight:900; max-width:560px; display:none"></div>
+  <button class="menu-btn" id="btnEndLevels" style="display:none">CHAPTER SELECT</button>
+</div>
+
+<script>(function(){var s=document.createElement('script');s.src='game.js?t='+Date.now();s.async=false;document.body.appendChild(s);})();</script>
+</body>
+</html>
