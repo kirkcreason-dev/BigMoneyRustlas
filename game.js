@@ -142,7 +142,7 @@ const BOSS_IMGS = [
   'bchips_1','bchips_2','bchips_3','bchips_4','bchips_5','bchips_6','bchips_7','bchips_8','bchips_9',
   'bchips_gold1','bchips_gold2','bchips_gold3','bchips_gold4','bchips_gold5'];
 const BGS = ['bg_island','bg_town','bg_saloon','bg_hideout'];
-const GROUND_IMGS = ['ground_grass','ground_wood','ground_sand','ground_crystal','ground_stonebrick','ground_corrupt','ground_darkrock','ground_cloud','ground_candy','ground_tech'];
+const GROUND_IMGS = ['ground_sand','ground_wood','ground_wood_dark'];
 let assetsReady = false;
 
 function loadAssets(cb) {
@@ -175,9 +175,9 @@ function RNG(seed) {
 const THEMES = [
   { bg:'bg_island',  ground:'ground_sand',  fill:'#6e4a2a', edge:'#caa15a', name:'Dusty Plains'      },
   { bg:'bg_town',    ground:'ground_wood',  fill:'#5a4530', edge:'#caa15a', name:'Mud Bug Town'      },
-  { bg:'bg_saloon',  ground:'ground_wood',  fill:'#3a2a1c', edge:'#8a6a3a', name:'Hatchetman Saloon' },
+  { bg:'bg_saloon',  ground:'ground_wood_dark',  fill:'#3a2a1c', edge:'#8a6a3a', name:'Hatchetman Saloon' },
   { bg:'bg_island',  ground:'ground_sand',  fill:'#6e4a2a', edge:'#caa15a', name:'Coyote Canyon'     },
-  { bg:'bg_hideout', ground:'ground_wood',  fill:'#2a2420', edge:'#6a5a48', name:"Chips' Hideout"   },
+  { bg:'bg_hideout', ground:'ground_wood_dark',  fill:'#2a2420', edge:'#6a5a48', name:"Chips' Hideout"   },
   { bg:'bg_town',    ground:'ground_sand',  fill:'#6e4a2a', edge:'#caa15a', name:'Mud Bug Town'      },
 ];
 
