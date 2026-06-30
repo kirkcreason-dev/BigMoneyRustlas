@@ -125,8 +125,6 @@ const SINGLE = [
 
   'rl_sugarwolf_slap_idle','rl_sugarwolf_slap_walk1','rl_sugarwolf_slap_walk2','rl_sugarwolf_slap_walk3','rl_sugarwolf_slap_jump','rl_sugarwolf_slap_crouch','rl_sugarwolf_slap_slap1','rl_sugarwolf_slap_slap2','rl_sugarwolf_slap_slap_ready',
 
-  'rl_bucky_idle','rl_bucky_walk1','rl_bucky_walk2','rl_bucky_walk3','rl_bucky_jump','rl_bucky_crouch','rl_bucky_aim','rl_bucky_shoot','rl_bucky_taunt',
-
   'coin','coin_shine','coin_stack','coin_pile','coin_spin1','coin_spin2','coin_spin3','coin_spin4',
   'chip_tan','chip_red','chip_black','chip_gold','chips_stack','chips_stack_mixed','chips_pile',
   'medallion','gold_nuggets','gold_bar','gold_bars','gold_chest',
@@ -144,7 +142,7 @@ const BOSS_IMGS = [
   'bchips_1','bchips_2','bchips_3','bchips_4','bchips_5','bchips_6','bchips_7','bchips_8','bchips_9',
   'bchips_gold1','bchips_gold2','bchips_gold3','bchips_gold4','bchips_gold5'];
 const BGS = ['bg_island','bg_town','bg_saloon','bg_hideout'];
-const GROUND_IMGS = ['ground_grass','ground_wood','ground_rock'];
+const GROUND_IMGS = ['ground_grass','ground_wood','ground_sand','ground_crystal','ground_stonebrick','ground_corrupt','ground_darkrock','ground_cloud','ground_candy','ground_tech'];
 let assetsReady = false;
 
 function loadAssets(cb) {
@@ -178,7 +176,7 @@ const THEMES = [
   { bg:'bg_island',  ground:'ground_grass', fill:'#6e4a2a', edge:'#caa15a', name:'Dusty Plains'      },
   { bg:'bg_town',    ground:'ground_wood',  fill:'#5a4530', edge:'#caa15a', name:'Mud Bug Town'      },
   { bg:'bg_saloon',  ground:'ground_wood',  fill:'#3a2a1c', edge:'#8a6a3a', name:'Hatchetman Saloon' },
-  { bg:'bg_island',  ground:'ground_rock',  fill:'#6e4a2a', edge:'#caa15a', name:'Coyote Canyon'     },
+  { bg:'bg_island',  ground:'ground_sand',  fill:'#6e4a2a', edge:'#caa15a', name:'Coyote Canyon'     },
   { bg:'bg_hideout', ground:'ground_wood',  fill:'#2a2420', edge:'#6a5a48', name:"Chips' Hideout"   },
 ];
 
@@ -228,11 +226,6 @@ const CHARACTERS = [
     imgJump:'rl_sugarwolf_gun_jump', imgCrouch:'rl_sugarwolf_gun_crouch',
     imgThrow:'rl_sugarwolf_gun_shoot', imgThrowAlt:'rl_sugarwolf_gun_shoot_alt', imgCheer:'rl_sugarwolf_gun_shotgun_ready',
     imgSlap:'rl_sugarwolf_slap_slap2', imgSlapReady:'rl_sugarwolf_slap_slap1' },
-  { id:'bucky', name:'Bucky', single:true, baseFacing:1, run:1.04, jumpV:1.04, spriteH:120, color:'#2f5a8c', desc:'Quick-draw gun for hire', shotKind:'bullet', canSlap:false,
-    imgIdle:'rl_bucky_idle',
-    walkImgs:['rl_bucky_walk1','rl_bucky_walk2','rl_bucky_walk3','rl_bucky_walk2'],
-    imgJump:'rl_bucky_jump', imgCrouch:'rl_bucky_crouch',
-    imgThrow:'rl_bucky_shoot', imgThrowAlt:'rl_bucky_aim', imgCheer:'rl_bucky_taunt' },
 ];
 
 const SUGARWOLF_GUN = { id:'sugarwolf_gun', name:'Sugar Wolf', single:true, baseFacing:1, run:1.06, jumpV:1.02, spriteH:120, color:'#7a5a32', desc:'The sheriff — fast guns', shotKind:'bullet',
@@ -2084,10 +2077,9 @@ function exitToMenu() {
   else { G.mode = 'title'; showScreen('scrTitle'); }
 }
 
-function openCharSelect() { Audio.resume(); charPreviewSel = (G.char && G.char.id) || 'sugarwolf'; buildCharSelect(); G.mode = 'select'; showScreen('scrChar'); }
-$('btnPlay').onclick = openCharSelect;
+$('btnPlay').onclick = () => { Audio.resume(); G.char = CHARACTERS[0]; G.baseChar = CHARACTERS[0]; afterChooseHero(); };
 
-$('scrTitle').onclick = () => { if (G.mode === 'title') openCharSelect(); };
+$('scrTitle').onclick = () => { if (G.mode === 'title') { Audio.resume(); $('btnPlay').onclick(); } };
 $('btnCharBack').onclick = () => { G.mode = 'title'; showScreen('scrTitle'); };
 $('btnCharGo').onclick = () => {
   const sel = charById(charPreviewSel);
