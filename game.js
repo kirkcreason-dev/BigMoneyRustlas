@@ -173,11 +173,12 @@ function RNG(seed) {
 }
 
 const THEMES = [
-  { bg:'bg_island',  ground:'ground_grass', fill:'#6e4a2a', edge:'#caa15a', name:'Dusty Plains'      },
+  { bg:'bg_island',  ground:'ground_sand',  fill:'#6e4a2a', edge:'#caa15a', name:'Dusty Plains'      },
   { bg:'bg_town',    ground:'ground_wood',  fill:'#5a4530', edge:'#caa15a', name:'Mud Bug Town'      },
   { bg:'bg_saloon',  ground:'ground_wood',  fill:'#3a2a1c', edge:'#8a6a3a', name:'Hatchetman Saloon' },
   { bg:'bg_island',  ground:'ground_sand',  fill:'#6e4a2a', edge:'#caa15a', name:'Coyote Canyon'     },
   { bg:'bg_hideout', ground:'ground_wood',  fill:'#2a2420', edge:'#6a5a48', name:"Chips' Hideout"   },
+  { bg:'bg_town',    ground:'ground_sand',  fill:'#6e4a2a', edge:'#caa15a', name:'Mud Bug Town'      },
 ];
 
 const ENEMY_TYPES = [
@@ -200,9 +201,9 @@ const BOSS_DEFS = {
 const LEVELS = [
   { name:'Back to Mud Bug',         theme:0, enemies:['bandit','thug'],           boss:null,
     story:'Sheriff Sugar Wolf rides back into Mud Bug \u2014 dusty, broke, and choked under Big Baby Chips. Time to clean house.' },
-  { name:'Chips\u2019 Welcome',     theme:1, enemies:['bandit','thug'],           boss:null,
+  { name:'Chips\u2019 Welcome',     theme:5, enemies:['bandit','thug'],           boss:null,
     story:'Word travels fast. Chips sends his weirdos to run the new sheriff out of town.' },
-  { name:'Raw Stank',               theme:1, enemies:['thug'],                    boss:'stank',
+  { name:'Raw Stank',               theme:5, enemies:['thug'],                    boss:'stank',
     story:'Raw Stank \u2014 one of Chips\u2019 thugs \u2014 blocks the road. Put him down.' },
   { name:'Dusty Poot',              theme:2, enemies:['pieslinger'],              boss:'poot',
     story:'Inside the Hatchetman Saloon, Dusty Poot is waiting with a pie and a grudge.' },
