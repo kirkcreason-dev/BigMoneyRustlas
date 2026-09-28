@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
-const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.png':'image/png', '.svg':'image/svg+xml', '.m4a':'audio/mp4', '.json':'application/json', '.webmanifest':'application/manifest+json' };
+const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.png':'image/png', '.svg':'image/svg+xml', '.wav':'audio/wav', '.m4a':'audio/mp4', '.json':'application/json', '.webmanifest':'application/manifest+json' };
 const port = Number(process.env.PORT || 4173);
 http.createServer(async (req,res) => {
   try {

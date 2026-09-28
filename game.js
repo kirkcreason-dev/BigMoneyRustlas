@@ -1,3 +1,4 @@
+import { SoundEngine } from './src/audio.js';
 import { Game, SLAP_DURATION, slapPose, slapReach, CHAPTERS, ENEMIES, BOSSES, UPGRADES, DIFFICULTIES, WIDTH, HEIGHT, FLOOR, clamp, defaultSave, sanitizeSave, settleRun, purchase } from './src/core.js';
 
 import { SECRETS } from './src/secrets.js';
@@ -16,52 +17,7 @@ function fmtTime(n){return `${Math.floor(n/60)}:${String(Math.floor(n%60)).padSt
 function hintText(text){return touchDevice||save.settings.touch?text.replace('A / D to move · SPACE to jump','Arrows to move · JUMP to leap').replace('Hold J to fire · R to reload · K to slap','Hold FIRE · ↻ to reload · SLAP to strike').replace('SHIFT to dodge','DODGE to roll').replace('K returns','SLAP returns').replace('K / slap','SLAP').replace('K ·','SLAP ·').replace('E ·','LOOK ·'):text;}
 function clearInput(){keys.clear();touchHeld.clear();for(const key of Object.keys(edges))delete edges[key];holdPointers.clear();document.querySelectorAll('#touch .pressed').forEach(b=>b.classList.remove('pressed'));}
 
-const audio={
-  ctx:null,musicTimer:null,musicBeat:0,
-  init(){
-    try{if(!this.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)this.ctx=new AC();}if(this.ctx?.state==='suspended')this.ctx.resume().catch(()=>{});
-}
-    catch{}
-  },
-  musicPlay(){
-    if(!save.settings.music||!this.ctx||this.musicTimer)return;
-    const tick=()=>{
-      if(!save.settings.music||mode!=='playing')return;
-      // Original procedural score: plucked low strings, a sparse lead, and hoofbeats.
-      const motif=[0,null,7,3,null,10,7,null,5,null,3,0,null,7,12,null,3,null,5,10,null,7,3,null,0,null,-2,5,null,3,0,null];
-      const beat=this.musicBeat++,root=game?.world.boss?.active?146.83:164.81;
-      const note=motif[beat%motif.length];
-      if(note!==null)this.musicTone(root*Math.pow(2,note/12),.22,'triangle',.028);
-      if(beat%4===0)this.musicTone(root/2*(beat%16<8?1:.75),.34,'triangle',.035);
-      if(beat%2===0)this.musicTone(58,.05,'sine',.035);
-    };
-    tick();this.musicTimer=setInterval(tick,190);
-  },
-  musicTone(freq,duration,type,gain){
-    if(!this.ctx)return;const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g);g.connect(this.ctx.destination);o.start(t);o.stop(t+duration+.02);
-  },
-  pause(){clearInterval(this.musicTimer);this.musicTimer=null;},
-  tone(f,d=.1,type='triangle',gain=.055,offset=0,end=f){
-    if(!save.settings.sound||!this.ctx)return;const t=this.ctx.currentTime+offset,o=this.ctx.createOscillator(),g=this.ctx.createGain();
-    o.type=type;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(Math.max(1,end),t+d);g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(this.ctx.destination);o.start(t);o.stop(t+d+.02);
-  },
-  sfx(type){
-    if(type==='coin')this.tone(1300,.075,'triangle',.035,0,1800);
-    else if(type==='shoot'){this.tone(100,.12,'sawtooth',.08,0,35);this.tone(650,.04,'square',.025,0,80);}
-    else if(type==='enemy-shot')this.tone(180,.08,'sawtooth',.025,0,60);
-    else if(type==='jump')this.tone(260,.12,'triangle',.035,0,510);
-    else if(type==='hurt'||type==='death')this.tone(170,.25,'sawtooth',.09,0,45);
-    else if(type==='impact'||type==='slap')this.tone(170,.07,'square',.04,0,55);
-    else if(type==='roll')this.tone(110,.16,'triangle',.04,0,240);
-    else if(type==='reload')this.tone(380,.045,'square',.025);
-    else if(type==='loaded'){this.tone(620,.045,'square',.025);this.tone(740,.05,'square',.02,.08);}
-    else if(type==='boss-tell')this.tone(100,.25,'sawtooth',.04,0,160);
-    else if(type==='slam'||type==='rage')this.tone(75,.4,'sawtooth',.08,0,25);
-    else if(['checkpoint','relic','heal','shield','parry','boss-defeated','complete','buy','secret'].includes(type)){
-      [440,554,659,880].forEach((f,i)=>this.tone(f,.16,'triangle',.055,i*.075));
-    }else this.tone(420,.06,'triangle',.035,0,520);
-  }
-};
+const audio=new SoundEngine(()=>save.settings,()=>game,()=>mode==='playing');
 
 const btn=(label,action,kind='secondary',extra='')=>`<button class="${kind}" data-action="${action}" ${extra}>${label}</button>`;
 const header=(eyebrow,title,sub='',right='')=>`<div class="panel-header"><div class="panel-heading"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2>${sub?`<p>${sub}</p>`:''}</div>${right||btn('← Back','home','text-button')}</div>`;
@@ -71,12 +27,12 @@ function show(html,nextMode){
   for(const cv of $('menu').querySelectorAll('[data-portrait]')){const name=cv.dataset.portrait,im=images[name],r=crops[name];if(im&&r){const c=cv.getContext('2d'),h=570,w=h*r.w/r.h;c.drawImage(im,r.x,r.y,r.w,r.h,(480-w)/2,600-h,w,h);}}
   const playing=mode==='playing';$('hud').hidden=!playing;$('touch').hidden=!playing||!(touchDevice||save.settings.touch);$('hint').hidden=!playing;
   document.body.classList.toggle('touch-mode',touchDevice||save.settings.touch);
-  if(playing){audio.musicPlay();$('hint').textContent=hintText(game.secretPrompt||game.lastSign);}else if(mode!=='home'){audio.pause();}
-  if(html)requestAnimationFrame(()=>{const el=$('menu').querySelector('button.primary:not(:disabled)')||$('menu').querySelector('button:not(:disabled),select');el?.focus({preventScroll:true});});
+  if(playing){audio.musicPlay();$('hint').textContent=hintText(game.secretPrompt||game.lastSign);}else{audio.pause(mode==='paused');}
+  if(html)requestAnimationFrame(()=>{const el=$('menu').querySelector('button.primary:not(:disabled)')||$('menu').querySelector('button:not(:disabled),select,input[type=range]');el?.focus({preventScroll:true});});
 }
 function home(){
   const continuation=save.run?`CONTINUE CHAPTER ${save.run.chapter}`:save.unlocked>1&&!save.beaten?`RIDE ON · CHAPTER ${save.unlocked}`:save.beaten?'RIDE AGAIN':'START YOUR STORY';
-  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><span class="title-star">★</span><h1><span>BIG MONEY</span>RUSTLAS</h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Field guide','guide')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><span>THE OFFICIAL BIG MONEY RUSTLAS GAME</span><span>KEYBOARD · CONTROLLER · TOUCH</span><button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.0</button></footer></div></div>`,'home');
+  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><span class="title-star">★</span><h1><span>BIG MONEY</span>RUSTLAS</h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Field guide','guide')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><span>THE OFFICIAL BIG MONEY RUSTLAS GAME</span><span>KEYBOARD · CONTROLLER · TOUCH</span><button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.1</button></footer></div></div>`,'home');
 }
 function chapters(){
   const completed=Object.keys(save.best).length,badges=Object.values(save.best).reduce((n,b)=>n+b.relics,0);
@@ -101,8 +57,10 @@ function shop(){
 }
 function settings(){
   const s=save.settings;
+  const volume=(key,label)=>`<div class="settings-row volume-row"><label for="${key}">${label}</label><div><input id="${key}" type="range" min="0" max="100" step="5" value="${s[key]}"><output id="${key}-value" for="${key}">${s[key]}%</output></div></div>`;
   const toggle=(key,title,desc)=>`<div class="settings-row"><div><strong>${title}</strong><small>${desc}</small></div>${btn(s[key]?'ON':'OFF',`toggle:${key}`,`toggle ${s[key]?'':'off'}`,`aria-pressed="${s[key]}" aria-label="${title}"`)}</div>`;
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">MAKE YOURSELF AT HOME</span><h2>Settings</h2><div class="settings-row"><div><strong>Difficulty</strong><small id="difficulty-desc">${DIFFICULTIES[s.difficulty].description}<br>Applies to newly started chapters.</small></div><select id="difficulty" aria-label="Difficulty">${Object.entries(DIFFICULTIES).map(([id,d])=>`<option value="${id}" ${s.difficulty===id?'selected':''}>${d.name}</option>`).join('')}</select></div>${toggle('sound','Sound effects','Gunfire, footsteps, and a little gold.')}${toggle('music','Music','An original frontier score, generated as you play.')}${toggle('motion','Screen effects','Camera shake and impact flashes.')}${toggle('touch','Show touch controls','Touch devices show these automatically.')}<div class="button-row settings-actions">${btn('Done',`back:${menuReturn}`,'primary')}${btn('Reset progress','reset','text-button')}</div></div></div>`,'settings');
+  show(`<div class="center-screen"><div class="dialog settings-dialog"><span class="eyebrow">MAKE YOURSELF AT HOME</span><h2>Settings</h2><div class="settings-row"><div><strong>Difficulty</strong><small id="difficulty-desc">${DIFFICULTIES[s.difficulty].description}<br>Applies to newly started chapters.</small></div><select id="difficulty" aria-label="Difficulty">${Object.entries(DIFFICULTIES).map(([id,d])=>`<option value="${id}" ${s.difficulty===id?'selected':''}>${d.name}</option>`).join('')}</select></div>${toggle('sound','Sound effects','Layered gunfire, elastic slaps, footsteps, and ambience.')}${toggle('music','Music','Fingerpicked guitar, bass, and a faster showdown rhythm.')}${volume('soundVolume','Effects volume')}${volume('musicVolume','Music volume')}<div class="sound-preview">${btn('Test sounds','sound-preview','secondary')}<span id="sound-status" role="status">Play a short effects preview.</span></div>${toggle('motion','Screen effects','Camera shake and impact flashes.')}${toggle('touch','Show touch controls','Touch devices show these automatically.')}<div class="button-row settings-actions">${btn('Done',`back:${menuReturn}`,'primary')}${btn('Reset progress','reset','text-button')}</div></div></div>`,'settings');
+  for(const key of ['soundVolume','musicVolume'])$(key).addEventListener('input',e=>{save.settings[key]=Number(e.target.value);$(key+'-value').textContent=save.settings[key]+'%';audio.applySettings();persist();});
   $('difficulty').addEventListener('change',e=>{save.settings.difficulty=e.target.value;persist();$('difficulty-desc').innerHTML=`${DIFFICULTIES[e.target.value].description}<br>Applies to newly started chapters.`;});
 }
 function guide(){
@@ -116,7 +74,7 @@ function ending(){
   show(`<div class="center-screen ending"><div class="dialog"><span class="eyebrow">MUD BUG IS FREE</span><h2>Some legends<br>run in the family.</h2><p>Chips falls. Beneath the gold and the paint is Grizzly Wolf—Sugar’s own father. The truth lands harder than any bullet. But the badge still means something.</p><p>With the town free and the road quiet, Sugar Wolf rides into the sunset. Mud Bug will remember its sheriff.</p><div class="story-quote">“A town worth saving. A story worth telling.”</div><div class="credits">BIG MONEY RUSTLAS<br>THE FIRST OFFICIAL VIDEO GAME<br><br>You completed all eight chapters. Return to the trail to find all 24 lost badges and set new records.</div><div class="button-row">${btn('Back to the trail','chapters','primary')}${btn('Credits','credits')}</div></div></div>`,'ending');
 }
 function credits(){
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits">FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>New illustrated environments, terrain, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original procedural music and sound effects.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.0<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
+  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits">FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>New illustrated environments, terrain, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.1<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
 }
 function journal(){
   const all=save.secrets.length===SECRETS.length;
@@ -132,8 +90,8 @@ function action(value){
   else if(name==='back')back(arg);
   else if(name==='buy'){if(purchase(save,arg)){persist();audio.sfx('buy');shop();toast(`${UPGRADES.find(i=>i.id===arg).name} equipped.`);}}
   else if(name==='toggle'){
-    save.settings[arg]=!save.settings[arg];persist();if(arg==='music'&&!save.settings.music)audio.pause();applyPreferences();settings();requestAnimationFrame(()=>$('menu').querySelector(`[data-action="toggle:${arg}"]`)?.focus());
-  }else if(name==='ending')ending();else if(name==='credits')credits();
+    save.settings[arg]=!save.settings[arg];persist();audio.applySettings();applyPreferences();settings();requestAnimationFrame(()=>$('menu').querySelector(`[data-action="toggle:${arg}"]`)?.focus());
+  }else if(name==='sound-preview'){audio.preview().then(ok=>{if($('sound-status'))$('sound-status').textContent=ok?'Revolver · reload · pimp hand · ricochet · gold':save.settings.sound?'Audio is unavailable in this browser.':'Turn sound effects on to hear the preview.';});}else if(name==='ending')ending();else if(name==='credits')credits();
   else if(name==='reset')show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">START FROM SCRATCH</span><h2>Hang up this badge?</h2><p class="reset-warning">This erases all saved chapters, gold, upgrades, and records on this device. Your next ride will begin at chapter one.</p><div class="button-row">${btn('Keep my progress','settings','primary')}${btn('Erase saved progress','erase')}</div></div></div>`,'reset');
   else if(name==='erase'){save=defaultSave();game=null;persist();applyPreferences();home();toast('A fresh start. Welcome back to Mud Bug.');}
 }
@@ -147,7 +105,7 @@ const gameKeys=new Set(['Space','KeyW','ArrowUp','KeyR','ShiftLeft','ShiftRight'
 addEventListener('keydown',e=>{
   if(!assetsReady)return;
   if(e.code==='Tab'&&mode!=='playing'){
-    const list=[...$('menu').querySelectorAll('button:not(:disabled),select')];if(list.length){const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}return;
+    const list=[...$('menu').querySelectorAll('button:not(:disabled),select,input[type=range]')];if(list.length){const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}return;
   }
   if(e.code==='Escape'||(e.code==='KeyP'&&mode==='playing')){
     if(e.repeat)return;e.preventDefault();if(mode==='playing')pause();else if(mode==='paused')resume();else if(['settings','guide','shop','journal'].includes(mode))back(menuReturn);else if(mode!=='home')home();return;
@@ -157,7 +115,7 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>keys.delete(e.code));
 addEventListener('blur',()=>{clearInput();if(mode==='playing')pause();});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(mode==='playing')pause();audio.pause();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(mode==='playing')pause();audio.pause(true);}});
 addEventListener('pagehide',saveRun);
 window.onAndroidPause=()=>{if(mode==='playing')pause();};
 window.onAndroidBack=()=>{if(mode==='playing')pause();else if(mode==='paused')resume();else home();};
@@ -186,7 +144,7 @@ function pollMenuPad(now){
   const a=pad.buttons[0]?.pressed,b=pad.buttons[1]?.pressed,start=pad.buttons[9]?.pressed;
   if((a||b||start)&&!menuPadDown){if(start&&mode==='paused')resume();else if(b&&mode!=='home')back(menuReturn);else if(a)document.activeElement?.click();}menuPadDown=!!(a||b||start);previousPad[9]=!!start;
   const dir=(pad.buttons[13]?.pressed||pad.buttons[15]?.pressed||pad.axes[1]>.6||pad.axes[0]>.6?1:0)-(pad.buttons[12]?.pressed||pad.buttons[14]?.pressed||pad.axes[1]<-.6||pad.axes[0]<-.6?1:0);
-  if(dir&&now-menuPadStamp>220){menuPadStamp=now;const list=[...$('menu').querySelectorAll('button:not(:disabled),select')];if(list.length){const i=list.indexOf(document.activeElement);list[(i+dir+list.length)%list.length].focus();}}
+  if(dir&&now-menuPadStamp>220){menuPadStamp=now;const list=[...$('menu').querySelectorAll('button:not(:disabled),select,input[type=range]')];if(list.length){const i=list.indexOf(document.activeElement);list[(i+dir+list.length)%list.length].focus();}}
 }
 
 function updateHud(){
@@ -204,7 +162,7 @@ function updateHud(){
 }
 function processEvents(){
   for(const e of game.events){
-    audio.sfx(e.type);
+    audio.sfx(e.type,e);
     if(e.type==='checkpoint'){saveRun();toast(e.message);}
     if(e.type==='hint'&&!game.secretPrompt)$('hint').textContent=hintText(e.text);
     if(e.type==='secret-prompt')$('hint').textContent=hintText(e.text||game.lastSign);

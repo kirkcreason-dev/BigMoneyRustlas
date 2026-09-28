@@ -34,7 +34,7 @@ All raster assets in `art/` were newly generated using the built-in ImageGen too
 | `outlaws.png` | Seven enemy types and Sanchez | Generate: original concealed-face bandit, rifleman, supernatural outlaw, gambler, pie thrower, bruiser, oversized boot enemy, and original mentor silhouette. No performer likeness references. |
 | `hack-benjamin.png` | Two cameo poses | Generate from observed Rustlas costume description: black cloth face covering, broad flat black hat, glossy coat, silver floral shoulder embroidery, black gloves; idle and hat-tip poses. |
 
-The star icon, coins, wells, discovery props, interface, and effects are original vector/canvas drawings. Music and sound effects are original synthesized patterns in `game.js`. Generated character art is stylized interpretation, not a guarantee of exact likeness or costume continuity.
+The star icon, coins, wells, discovery props, interface, and effects are original vector/canvas drawings. The 46 audio assets in `sound/` are original digital synthesis from `scripts/design-sounds.py`; the guitar score and mixer are in `src/audio.js`. See `SOUND_DESIGN.md`. Generated character art is stylized interpretation, not a guarantee of exact likeness or costume continuity.
 
 ## New game material
 

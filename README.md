@@ -19,7 +19,7 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 - Six-shot revolver, automatic reloads, dodge rolls, variable-height jumping, elastic slaps with matching long-range hits, projectile returns, and a eight-pose pimp-hand atlas plus three supernatural extension/recoil poses.
 - 24 persistent discoveries with original dialogue, film callbacks, a Hack Benjamin cameo, and a completion reward.
 - Six permanent upgrades bought using earned gold. Three difficulty settings. Chapter replay, records, journal, save/continue, pause, and credits.
-- New illustrated sprites, eight terrain pieces, original environments, and original procedural music and effects.
+- New illustrated sprites, eight terrain pieces, original environments, and 46 original sound assets, an adaptive guitar score, and scene ambience.
 - Keyboard, touch controls, and standard gamepad mappings. Reduced screen effects and separate sound/music settings.
 
 The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
@@ -42,14 +42,18 @@ Touch buttons appear automatically on touch devices, or can be enabled in Settin
 
 ## Project layout
 
-`src/core.js` contains browser-independent gameplay; `src/secrets.js` contains discoveries; `src/assets.js` defines sprite frames and visual assets. `game.js` handles rendering, menus, audio, input, and saves. `art/` contains the new PNG assets. `scripts/build.mjs` exports only the current game's allowlisted files.
+`src/core.js` contains browser-independent gameplay; `src/secrets.js` contains discoveries; `src/assets.js` defines sprite frames and visual assets. `game.js` handles rendering, menus, input, and saves. `src/audio.js` manages the sound mix and score; `sound/` holds 46 original WAV assets. `art/` contains the new PNG assets. `scripts/build.mjs` exports only the current game's allowlisted files.
 
 The inherited `img/` and `audio/` directories are retained as source history and are **not loaded or included in the export**. Do not use those directories as the release asset list.
 
 ## Validation
 
-Twelve automated tests cover an input-only playthrough of all eight chapters with earned upgrades, platform and gap reachability, all 24 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, and purchases. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
+Sixteen automated tests cover an input-only playthrough of all eight chapters with earned upgrades, platform and gap reachability, all 24 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
 
 ## Art and authorization
 
-See `docs/ART_AND_RIGHTS.md` for the asset manifest, generation directions, user-confirmed scope, and film research notes. No third-party recording, lyric, guest-performer portrait, or band logo is included in the release.
+See `docs/ART_AND_RIGHTS.md` for the asset manifest, generation directions, user-confirmed scope, and film research notes. No third-party recording, lyric, guest-performer portrait, or band logo is included in the release. See `docs/SOUND_DESIGN.md` for sound design and mix validation.
+
+## Full ZIP and sound design
+
+After `npm run build`, run `python3 scripts/package-release.py` for full-game and source ZIPs in `dist/packages/`. The packager and optional `python3 scripts/design-sounds.py` regeneration step need Python 3 and use only its standard library. Settings has independent effects/music volume sliders and a **Test sounds** preview.

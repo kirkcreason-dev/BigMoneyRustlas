@@ -52,7 +52,7 @@ export const BOSSES = {
   tank:{name:'Tank',prefix:'btank_',hp:26,w:72,h:108,tip:'JUMP THE FIRING LINE'},
   chips:{name:'Big Baby Chips',prefix:'bchips_',hp:30,w:94,h:128,tip:'WATCH THE TELL. TAKE YOUR SHOT.'}
 };
-export function defaultSave() { return {version:2,unlocked:1,coins:0,items:{},best:{},secrets:[],settings:{difficulty:'outlaw',sound:true,music:true,motion:true,touch:false},run:null,beaten:false}; }
+export function defaultSave() { return {version:2,unlocked:1,coins:0,items:{},best:{},secrets:[],settings:{difficulty:'outlaw',sound:true,music:true,soundVolume:80,musicVolume:55,motion:true,touch:false},run:null,beaten:false}; }
 export function sanitizeSave(raw) {
   const s=defaultSave(); if (!raw || typeof raw!=='object') return s;
   const int=(n,max=1e7)=>Number.isFinite(n)?clamp(Math.floor(n),0,max):0;
@@ -65,6 +65,7 @@ export function sanitizeSave(raw) {
   }
   if(raw.settings && typeof raw.settings==='object') {
     if(DIFFICULTIES[raw.settings.difficulty]) s.settings.difficulty=raw.settings.difficulty;
+    for(const k of ['soundVolume','musicVolume'])if(Number.isFinite(raw.settings[k]))s.settings[k]=clamp(raw.settings[k],0,100);
     for(const k of ['sound','music','motion','touch']) if(typeof raw.settings[k]==='boolean') s.settings[k]=raw.settings[k];
   }
   const r=raw.run;
@@ -169,13 +170,13 @@ export class Game {
     this.ammo=6;this.reload=0;this.cam=Math.max(0,p.x-400);
   }
   retry() {this.hp=this.maxHp;this.shield=!!this.items.shield;this.dead=false;this.resetPosition();this.emit('checkpoint',{message:'Back in the saddle. Your gold is safe.'});}
-  damageEnemy(e,amount=1) {
-    if(e.dead)return;e.hp-=amount;e.flash=.12;this.effect(e.x+e.w/2,e.y+e.h/2,'#f5c15b',6);this.emit('impact');
+  damageEnemy(e,amount=1,weapon='bullet') {
+    if(e.dead)return;e.hp-=amount;e.flash=.12;this.effect(e.x+e.w/2,e.y+e.h/2,'#f5c15b',6);this.emit('impact',{x:e.x+e.w/2,weapon});
     if(e.hp<=0){e.dead=true;this.killed.add(e.id);this.kills++;this.combo++;this.comboTimer=3;const points=100*Math.min(this.combo,5);this.score+=points;this.float(`+${points}`,e.x,e.y);this.effect(e.x,e.y,'#ce9470',14);}
   }
-  damageBoss(amount=1) {
+  damageBoss(amount=1,weapon='bullet') {
     const b=this.world.boss;if(!b||b.dead||!b.active||b.flash>.15)return;
-    b.hp-=amount;b.flash=.1;this.emit('impact');this.effect(b.x+b.w/2,b.y+b.h/2,'#efc16a',8);this.shake=.08;
+    b.hp-=amount;b.flash=.1;this.emit('impact',{x:b.x+b.w/2,weapon});this.effect(b.x+b.w/2,b.y+b.h/2,'#efc16a',8);this.shake=.08;
     if(b.hp>0)return;
     if(b.kind==='chips'&&!b.enraged){b.enraged=true;b.hp=24;b.maxHp=24;b.phase='rage';b.timer=1.8;b.flash=1.5;this.shots=[];this.shake=.5;this.emit('rage');return;}
     b.dead=true;this.shots=[];this.score+=1500;this.effect(b.x,b.y,'#eaba55',40);this.emit('boss-defeated',{name:b.name});
@@ -190,20 +191,24 @@ export class Game {
   }
   slap() {
     const p=this.player;if(p.slapCD>0||p.roll>0)return;
-    p.slapCD=.5;p.action=SLAP_DURATION;p.actionKind='slap';p.slapHits=new Set();this.emit('slap');
+    p.slapCD=.5;p.action=SLAP_DURATION;p.actionKind='slap';p.slapHits=new Set();p.slapExtended=false;p.slapRecoiled=false;this.emit('slap');
   }
   updateSlap(){
     const p=this.player;if(p.actionKind!=='slap'||p.roll>0)return;
+    const elapsed=SLAP_DURATION-p.action;
+    if(p.action<=0)return;
+    if(elapsed>=.10&&!p.slapExtended){p.slapExtended=true;this.emit('slap-extend');}
+    if(elapsed>=.21&&!p.slapRecoiled){p.slapRecoiled=true;this.emit('slap-recoil');}
     const range=slapReach(p.action,this.items.slap);if(!range)return;
     const hit={x:p.dir>0?p.x+p.w/2:p.x+p.w/2-range,y:p.y-55,w:range,h:p.h+34};
-    for(const e of this.world.enemies)if(!e.dead&&!p.slapHits.has(e)&&overlaps(hit,e)){p.slapHits.add(e);this.damageEnemy(e,this.items.slap?3:2);}
-    const b=this.world.boss;if(b&&!b.dead&&b.active&&b.flash<=.15&&!p.slapHits.has(b)&&overlaps(hit,b)){p.slapHits.add(b);this.damageBoss(this.items.slap?3:2);}
+    for(const e of this.world.enemies)if(!e.dead&&!p.slapHits.has(e)&&overlaps(hit,e)){p.slapHits.add(e);this.damageEnemy(e,this.items.slap?3:2,'slap');}
+    const b=this.world.boss;if(b&&!b.dead&&b.active&&b.flash<=.15&&!p.slapHits.has(b)&&overlaps(hit,b)){p.slapHits.add(b);this.damageBoss(this.items.slap?3:2,'slap');}
     for(const s of this.shots)if(!s.friendly&&overlaps(hit,{x:s.x-s.r,y:s.y-s.r,w:s.r*2,h:s.r*2})){
       s.friendly=true;s.vx=p.dir*650;s.vy=0;s.gravity=0;s.kind='return';s.life=2;s.damage=3;this.float('RETURN TO SENDER',p.x,p.y-40,'#b6e3c3');this.emit('parry');this.effect(s.x,s.y,'#b6e3c3',12);
     }
   }
   move(dt,input) {
-    const p=this.player;
+    const p=this.player,wasGround=p.ground,previousX=p.x;
     for(const k of ['invuln','roll','rollCD','fireCD','slapCD','action','coyote','jumpBuffer'])p[k]=Math.max(0,p[k]-dt);
     p.anim+=dt;p.duck=!!input.down;if(p.ground)p.coyote=.11;
     if(input.jump)p.jumpBuffer=.13;
@@ -215,13 +220,16 @@ export class Game {
     p.vy+=1900*dt*(input.jumpHeld&&p.vy<0?.54:1);p.vy=Math.min(p.vy,1200);
     p.x+=p.vx*dt;
     for(const q of this.world.platforms)if(!q.oneWay&&overlaps(p,q)){if(p.vx>0)p.x=q.x-p.w;else if(p.vx<0)p.x=q.x+q.w;}
-    const oldY=p.y;p.y+=p.vy*dt;p.ground=false;
+    const oldY=p.y,fallSpeed=p.vy;p.y+=p.vy*dt;p.ground=false;
     for(const q of this.world.platforms){
       if(p.x+p.w<=q.x||p.x>=q.x+q.w)continue;
       const bowing=this.secrets.some(s=>!s.found&&s.action==='down'&&Math.abs(p.x+p.w/2-s.x)<76&&Math.abs(oldY+p.h-s.y)<42);
       if(q.oneWay&&input.down&&!bowing)continue;
       if(p.vy>=0&&oldY+p.h<=q.y+3&&p.y+p.h>=q.y){p.y=q.y-p.h;p.vy=0;p.ground=true;p.jumps=0;}
     }
+    const surface=['bg_town','bg_saloon'].includes(this.world.def.bg)?'wood':'dirt';
+    if(p.ground&&!wasGround&&fallSpeed>240)this.emit('land',{surface});
+    if(p.ground&&p.roll<=0){p.stepDistance=(p.stepDistance||0)+Math.abs(p.x-previousX);if(p.stepDistance>82){p.stepDistance%=82;p.stepCount=(p.stepCount||0)+1;this.emit('footstep',{surface,variant:p.stepCount%3});}}
     const b=this.world.boss;
     p.x=clamp(p.x,b?.active&&!b.dead?b.arena-100:0,this.world.length-p.w);
     if(p.y>HEIGHT+150)this.hurt(p.x,true);
@@ -230,7 +238,7 @@ export class Game {
   }
   enemyShot(e,kind='bullet',vy=0) {
     const speed=(kind==='pie'?260:310)*this.difficulty.speed;
-    this.shots.push({x:e.x+e.w/2,y:e.y+26,vx:e.dir*speed,vy,r:kind==='pie'?12:7,friendly:false,kind,life:4,gravity:kind==='pie'?650:0,damage:1});this.emit('enemy-shot');
+    this.shots.push({x:e.x+e.w/2,y:e.y+26,vx:e.dir*speed,vy,r:kind==='pie'?12:7,friendly:false,kind,life:4,gravity:kind==='pie'?650:0,damage:1});this.emit('enemy-shot',{x:e.x,kind});
   }
   updateEnemy(e,dt) {
     if(e.dead)return;const p=this.player;const dx=p.x-e.x;e.t+=dt;e.flash=Math.max(0,e.flash-dt);
@@ -249,13 +257,13 @@ export class Game {
       else if(e.timer<=0&&Math.abs(dx)<500){e.phase='aim';e.timer=.65;}
     }
     if(overlaps(p,e)&&p.invuln<=0&&p.roll<=0){
-      if(p.vy>120&&p.y+p.h-e.y<25&&e.kind!=='bruiser'){p.vy=-520;this.damageEnemy(e,2);this.emit('jump');}else this.hurt(e.x);
+      if(p.vy>120&&p.y+p.h-e.y<25&&e.kind!=='bruiser'){p.vy=-520;this.damageEnemy(e,2,'stomp');this.emit('jump');}else this.hurt(e.x);
     }
   }
   chooseBossAttack(b) {
     const patterns={stank:['charge','slam','charge'],poot:['pies','pies','charge'],tank:['volley','high','volley'],chips:b.enraged?['slam','volley','charge','pies']:['pies','charge','slam']};
     b.attack=patterns[b.kind][b.attackCount++%patterns[b.kind].length];b.phase='tell';b.timer=b.enraged?.58:.85;b.dir=this.player.x>b.x?1:-1;b.targetX=this.player.x;
-    this.emit('boss-tell',{attack:b.attack});
+    this.emit('boss-tell',{attack:b.attack,x:b.x});
   }
   updateBoss(dt) {
     const b=this.world.boss,p=this.player;if(!b||b.dead)return;
@@ -278,7 +286,7 @@ export class Game {
         b.fired=true;
         if(b.attack==='pies')for(let i=0;i<3;i++)this.shots.push({x:b.x+b.w/2,y:b.y+20,vx:b.dir*(180+i*100),vy:-420-i*25,r:13,life:3,kind:'pie',gravity:700,friendly:false});
         else for(let i=0;i<(b.enraged?5:3);i++)this.shots.push({x:b.x+b.w/2-b.dir*i*88,y:FLOOR-(b.attack==='high'?127:34),vx:b.dir*450*this.difficulty.speed,vy:0,r:7,life:3,kind:'bullet',friendly:false});
-        this.emit('enemy-shot');
+        this.emit('enemy-shot',{x:b.x,kind:b.attack==='pies'?'pie':'bullet'});
       }
       if(b.timer<=0){b.phase='recover';b.timer=b.enraged?.65:1.1;}
     }else if((b.phase==='recover'||b.phase==='rage')&&b.timer<=0){b.phase='idle';b.timer=.45;b.dir=p.x>b.x?1:-1;}
