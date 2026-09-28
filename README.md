@@ -1,47 +1,55 @@
-# Big Money Rustlas — story build
+# Big Money Rustlas — The First Official Video Game
 
-A Western platformer on your Kash's/Kylie's engine, following the film's plot.
+An eight-chapter illustrated Western action platformer. Play Sugar Wolf, reclaim Mud Bug, learn the pimp hand, and confront Big Baby Chips.
 
-## Files
-- `index.html`, `game.js`, `img/` — drop all three into `app/src/main/assets/`
-  (now includes an `audio/` folder) into `app/src/main/assets/` for the Android WebView, or at a GitHub Pages root for web.
+## Play and build
 
-## How it plays
-- **Sugar Wolf is the only playable character.** Title → story card → play.
-- B = shoot, A = jump, ◀▶ move, ▼ crouch/drop, ▲ jetpack (shop item).
+Requires Node.js 20 or newer for development. No package dependencies or install step.
 
-## The 8 chapters (follows the script)
-1. Back to Mud Bug — Dusty Plains
-2. Chips' Welcome — Mud Bug Town
-3. **Raw Stank** (boss)
-4. **Dusty Poot** (boss) — Hatchetman Saloon
-5. The Saloon Floor
-6. **Tank** (boss) — the "Tink" assassin; cripples Sugar's gun hand
-7. Sanchez's Lesson — High Sierra; Sugar auto-switches to his **slap** form
-8. **Big Baby Chips** showdown — Chips' Hideout; he enrages into gold "Big Money
-   Chips," then the ending reveals he's **Grizzly Wolf**, Sugar's father.
+- `npm start` opens a local server at http://localhost:4173 (open that address in your browser).
+- `npm run check` checks syntax and runs the game tests.
+- `npm run build` creates `dist/`, ready for static hosting, plus `dist/BigMoneyRustlas.html`, a self-contained edition with embedded art and music synthesis.
 
-## Characters
-- Big Baby Chips = the fat clown (final boss).
-- The Ghost = the laser-eyes sprite (enemy).
-- Other outlaws: bandit, gun-hand, gambler, pie-slinger, bruiser, The Foot.
+Publish the contents of `dist/` for the web edition. The single HTML edition is designed to open directly in a browser. Browsers may handle save persistence differently for local files; the hosted edition has a stable save origin.
 
-## Art in this build
-- Real panoramas: desert (Dusty Plains), Mud Bug street, Hatchetman Saloon,
-  snowy High Sierra, jail/cellar (Chips' Hideout).
-- Real ground pieces: dirt, wood plank, ice (snow cap preserved).
+## The game
 
-## This build
-- **Checkpoint is now the stone well** ("DO NOT DRINK"); it lights up gold when reached.
-- Removed the placeholder flag/gem checkpoint and the controlled-hero arrow.
-- **Performance:** ground tiles are pre-rendered and only drawn on-screen (was
-  re-sampling the full-length floor every frame); render resolution capped for
-  high-density screens.
+- Eight authored chapters, optional elevated routes, three lost badges in each chapter, and checkpoint wells.
+- Four boss fights with attack warnings and recovery windows. Chips has a second gold phase.
+- Six-shot revolver, automatic reloads, dodge rolls, variable-height jumping, elastic slaps with matching long-range hits, projectile returns, and a eight-pose pimp-hand atlas plus three supernatural extension/recoil poses.
+- 24 persistent discoveries with original dialogue, film callbacks, a Hack Benjamin cameo, and a completion reward.
+- Six permanent upgrades bought using earned gold. Three difficulty settings. Chapter replay, records, journal, save/continue, pause, and credits.
+- New illustrated sprites, eight terrain pieces, original environments, and original procedural music and effects.
+- Keyboard, touch controls, and standard gamepad mappings. Reduced screen effects and separate sound/music settings.
 
-## Notes
-- No dog, no switch puzzles, no water levels.
-- Not browser-tested here (no canvas in my environment). Headless pass is clean:
-  engine loads, all 8 chapters generate, all 4 boss fights spawn the right
-  villain, the slap-hero swap fires on chapter 7, and 102/102 sprites exist.
-  Give it a device playtest — most likely tuning is boss HP/speed and the ground
-  line against the interior backdrops.
+The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
+
+## Controls
+
+| Action | Keyboard | Standard controller |
+|---|---|---|
+| Move | A/D or arrows | Left stick / D-pad |
+| Jump (hold for height) | Space / W / Up | A |
+| Shoot | J / X | X / RT |
+| Pimp hand / return projectiles | K / C | Y |
+| Reload | R | LB |
+| Dodge | Shift | B |
+| Inspect | E | LT |
+| Bow / drop through platforms | S / Down | D-pad down |
+| Pause | Esc / P | Start |
+
+Touch buttons appear automatically on touch devices, or can be enabled in Settings. Landscape gives more room to play.
+
+## Project layout
+
+`src/core.js` contains browser-independent gameplay; `src/secrets.js` contains discoveries; `src/assets.js` defines sprite frames and visual assets. `game.js` handles rendering, menus, audio, input, and saves. `art/` contains the new PNG assets. `scripts/build.mjs` exports only the current game's allowlisted files.
+
+The inherited `img/` and `audio/` directories are retained as source history and are **not loaded or included in the export**. Do not use those directories as the release asset list.
+
+## Validation
+
+Twelve automated tests cover an input-only playthrough of all eight chapters with earned upgrades, platform and gap reachability, all 24 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, and purchases. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
+
+## Art and authorization
+
+See `docs/ART_AND_RIGHTS.md` for the asset manifest, generation directions, user-confirmed scope, and film research notes. No third-party recording, lyric, guest-performer portrait, or band logo is included in the release.
