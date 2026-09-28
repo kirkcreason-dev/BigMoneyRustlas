@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Rustlas artwork QA</title>
+<style>body{font:16px system-ui;background:#201810;color:#f4dbb5;margin:32px}button{padding:14px;font:inherit}pre{white-space:pre-wrap;line-height:1.6}canvas{background:#83603d;width:min(1200px,100%);height:auto}</style>
+<h1>Artwork cache regression and timing</h1><p>Checks every frame against the original trim algorithm and checks transparent crop borders. Timing covers local decoded artwork, not download time.</p>
+<button id="run">Run artwork checks</button><pre id="result" role="status">Ready</pre><canvas id="preview" width="1200" height="680" aria-label="Cached character and terrain preview"></canvas>
+<script type="module">
+import {ASSETS,FRAMES} from '../src/assets.js';
+import {prepareArtwork,canvasSize} from '../src/presentation.js';
+const out=document.querySelector('#result'),button=document.querySelector('#run');
+button.onclick=async()=>{
+  button.disabled=true;out.textContent='Loading original sprite atlases…';
+  try{
+    const images={};
+    await Promise.all([...new Set(Object.values(FRAMES).map(f=>f.sheet))].map(async name=>{const image=new Image();image.src='../'+ASSETS[name];await image.decode();images[name]=image;}));
+    const pixels={};for(const [name,im]of Object.entries(images)){const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);pixels[name]=ctx.getImageData(0,0,c.width,c.height).data;}
+    // The pre-2.4 loop is intentionally kept independent of the optimized helper.
+    const baseline=()=>{const crops={};for(const [name,r]of Object.entries(FRAMES)){
+      const im=images[r.sheet],data=pixels[r.sheet];let x0=r.x+r.w,y0=r.y+r.h,x1=r.x,y1=r.y;
+      for(let y=r.y;y<Math.min(im.height,r.y+r.h);y++)for(let x=r.x;x<Math.min(im.width,r.x+r.w);x++)if(data[(y*im.width+x)*4+3]>80&&!r.omit?.some(q=>x>=q.x&&x<q.x+q.w&&y>=q.y&&y<q.y+q.h)){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+      crops[name]={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};
+    }return crops;};
+    const start=performance.now(),expected=baseline(),baselineMs=performance.now()-start;
+    const cachedStart=performance.now(),actual=await prepareArtwork(images,FRAMES),cachedMs=performance.now()-cachedStart;
+    let checked=0;const unique=new Set();
+    for(const [name,crop]of Object.entries(actual.crops)){
+      if(JSON.stringify(crop)!==JSON.stringify(expected[name]))throw Error('Crop changed: '+name);
+      const view=actual.views[name];if(!unique.has(view)){
+        unique.add(view);const data=view.getContext('2d').getImageData(0,0,view.width,view.height).data;
+        for(let x=0;x<view.width;x++)if(data[x*4+3]||data[((view.height-1)*view.width+x)*4+3])throw Error('Opaque horizontal border: '+name);
+        for(let y=0;y<view.height;y++)if(data[(y*view.width)*4+3]||data[(y*view.width+view.width-1)*4+3])throw Error('Opaque vertical border: '+name);
+      }checked++;
+    }
+    const c=document.querySelector('#preview').getContext('2d');c.clearRect(0,0,1200,680);
+    const names=['rl_sugarwolf_gun_idle','rl_sugarwolf_gun_shoot','pimp_windup','pimp_recover','bstank_1','bpoot_1','btank_1','bchips_1','hack_idle','pimp_extend'];
+    names.forEach((name,i)=>{const view=actual.views[name],h=i===9?170:200,w=h*view.width/view.height,x=i===9?40:(i%5)*240+20,y=i===9?480:Math.floor(i/5)*230+20;c.drawImage(view,x,y,w,h);});
+    out.textContent=`PASS: ${checked} exact matching crops; ${unique.size} transparent sprite buffers.\nAlpha scans: ${checked} → ${actual.scans} (${Math.round((1-actual.scans/checked)*100)}% fewer).\nOriginal scan loop: ${baselineMs.toFixed(1)} ms. New full preparation, including canvas copies and cooperative yields: ${cachedMs.toFixed(1)} ms.\n4K retina backing: ${JSON.stringify(canvasSize(3840,2160,2))}.\nNo source artwork changed.`;
+  }catch(e){out.textContent='FAIL: '+e.message;console.error(e);}finally{button.disabled=false;}
+};
+</script></html>

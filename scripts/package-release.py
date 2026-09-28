@@ -14,7 +14,7 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.3
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.4
 
 Open BigMoneyRustlas.html in a modern browser to play. All images and all 46 original
 sound assets are embedded. If your browser restricts local HTML or saving, use the
@@ -32,6 +32,15 @@ CONTROLS
 A/D or arrows: move. Space: jump (hold for height). J: fire. K: pimp hand.
 Shift: dodge. R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
 From chapter seven onward, Sugar uses the pimp hand instead of the injured gun hand.
+
+QUALITY UPDATE
+More forgiving action timing, committed dodge direction, slap/dodge readiness meters,
+live score and combo timing, stronger impact feedback, and streak/parry results.
+Health packs wait until needed. Checkpoint saves preserve earned score and defeated
+bosses. Restart confirmation, clearer slap-only controls, larger touch targets, and
+reduced-motion support throughout. All original artwork and your studio logo retained.
+Artwork processing scans 45 unique crops instead of 101. Optimized rendering and HUD
+updates reduce repeated work. See Source/docs/QUALITY.md for checks and measurements.
 
 STUDIO INTRO
 The supplied CREASO·NORSE logo opens a six-second studio/title intro. Skip with the
@@ -61,7 +70,7 @@ Sound details and verification: Source/docs/SOUND_DESIGN.md
 Inherited unused film-image and soundtrack folders are excluded from this release.
 
 VALIDATION
-16 automated checks pass, including full-campaign playthrough and audio regressions.
+26 automated checks pass, including full-campaign playthrough and audio regressions.
 The browser mixer decoded all 46 sounds and passed signal, mute, and pause checks.
 Physical phone/controller and subjective speaker/headphone listening remain to be done.
 
@@ -79,4 +88,4 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.3\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.4\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])

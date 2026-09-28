@@ -82,3 +82,23 @@ select{background:#f5dfb3;border:1px solid #92613a;color:#382419}.toggle{border:
 @media(prefers-reduced-motion:reduce){.studio-intro .intro-stage,.studio-intro:before{animation:none!important;transition:none!important;transform:none!important}}
 @media(max-width:640px){.intro-overline{margin-bottom:25px}.intro-studio img{width:88vw}.intro-game img{width:90vw}.intro-game p{font-size:12px;line-height:1.7;max-width:280px}.intro-game-label{font-size:9px;letter-spacing:.04em}.intro-bottom>span{font-size:8px}.studio-brand img{width:150px}.home-foot{gap:12px}.home-foot>span{max-width:120px;line-height:1.8}.loading-studio{bottom:20px}}
 @media(max-height:550px) and (min-width:641px){.intro-stage{inset:0 20px 45px}.intro-overline{margin-bottom:15px}.intro-studio img{width:min(444px,65vw)}.intro-rule{margin-top:15px}.intro-presents{margin-top:15px}.intro-game img{width:330px;max-width:65vw}.intro-game-label{margin-top:5px;font-size:9px}.intro-game p{margin-top:12px;font-size:12px}.intro-bottom{bottom:13px}.home-foot{margin-top:10px}.studio-brand img{width:135px}.loading-studio{bottom:12px;width:135px}}
+
+/* Small, steady combat readouts keep attention on the street. */
+#trail-fill,#reload-fill,#boss-fill,#slap-fill,#roll-fill,#combo-fill{width:100%!important;transform:scaleX(0);transform-origin:left;will-change:transform}
+#boss-fill{transition:transform .1s ease-out}
+#ability-hud{position:absolute;left:28px;top:181px;display:flex;gap:8px}
+.ability{width:79px;background:#321a10eb;border:1px solid #c79a4e88;padding:7px 8px 6px}
+.ability span{display:flex;justify-content:space-between;gap:5px;font-size:8px;letter-spacing:.04em;color:#e3c397}
+.ability b{font-size:7px;color:#ffe29c}.ability i{display:block;height:3px;background:#edbd51;margin-top:6px}
+#score-hud{position:absolute;right:28px;top:133px;min-width:134px;padding:9px 12px;background:#321a10e8;border-right:3px solid #c79a4e;text-align:right}
+#score-hud span{display:block;font-size:8px;letter-spacing:.11em;color:#eed39d}#score-hud strong{display:block;margin-top:5px;font:18px var(--western);color:#ffe7b2}#score-hud i{display:block;height:2px;background:#e9b34c;margin-top:6px}
+#health.low-health{color:#ffa486}.run-summary{display:flex;gap:24px;border-top:1px solid #98673366;padding:14px 0 22px;color:#745034;font-size:9px;letter-spacing:.07em}.run-summary b{font:18px var(--western);color:#8b301d;margin-right:5px}
+.melee-only .gun-control,.melee-only #touch [data-hold=fire],.melee-only #touch [data-tap=reload]{display:none}
+#touch button{-webkit-touch-callout:none}#touch .small-touch{min-width:44px;min-height:44px}
+.touch-move{left:max(18px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom))}.touch-actions{right:max(18px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom))}
+.icon-button,.studio-brand,.toggle{min-height:44px}.studio-brand{display:grid;place-items:center}
+@media(max-width:640px){#ability-hud{top:155px;left:12px;gap:5px}.ability{width:65px;padding:6px 5px}.ability span{font-size:7px}.ability b{font-size:6px}#score-hud{top:121px;right:12px;min-width:95px;padding:7px 8px}#score-hud span{font-size:7px;max-width:85px;line-height:1.6}#score-hud strong{font-size:16px}#boss-hud{top:211px;width:90vw}#boss-state{display:inline;font-size:8px}.touch-move{bottom:max(35px,env(safe-area-inset-bottom));left:max(12px,env(safe-area-inset-left));gap:6px;flex-wrap:wrap;width:112px}.touch-actions{bottom:max(35px,env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));max-width:210px;gap:6px}.touch-move .small-touch{margin-top:3px}.run-summary{gap:16px}.studio-brand img{width:150px}}
+@media(max-height:550px) and (min-width:641px){#ability-hud{top:146px;left:28px}.ability{width:73px;padding:5px 7px}#score-hud{top:106px;right:28px;min-width:115px;padding:6px 9px}#score-hud strong{font-size:16px}#boss-state{display:inline;font-size:8px}#boss-hud{width:min(320px,40vw)}.touch-move,.touch-actions{bottom:max(12px,env(safe-area-inset-bottom));gap:8px}#touch .small-touch{width:44px;height:44px;font-size:8px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(max-width:640px){.hud-middle{width:140px}.hud-middle strong{font-size:10px;line-height:1.35}.hud-middle .eyebrow{font-size:7px;letter-spacing:.1em}#ability-hud{top:185px}#boss-hud{top:233px}}
+@media(max-width:360px){.hud-middle{width:110px}#score-hud{min-width:89px;width:89px}#score-hud span{max-width:69px;font-size:6px}.touch-actions{max-width:172px}}

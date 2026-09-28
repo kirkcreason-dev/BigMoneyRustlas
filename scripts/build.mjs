@@ -33,6 +33,7 @@ const core=wrap(await read('src/core.js'),'Game,SLAP_DURATION,slapPose,slapReach
 let assetSource=await read('src/assets.js');
 assetSource=assetSource.replace(/export const ASSETS=\{[\s\S]*?\n\};/,`export const ASSETS=${JSON.stringify(data)};`);
 const assets=wrap(assetSource,'ASSETS,FRAMES,backgroundUrl');
+const presentation=wrap(await read('src/presentation.js'),'canvasSize,trimFrame,prepareArtwork,prepareScenery');
 const soundBank=`const SOUND_ASSETS=${JSON.stringify(soundData)};\n`;
 const audioSource=wrap(await read('src/audio.js'),'SoundEngine,soundScene,soundCue');
 let css=await read('style.css');
@@ -40,7 +41,7 @@ const font='data:font/ttf;base64,'+(await readFile(path.join(root,'fonts/Rye-Reg
 css=css.replace("url('fonts/Rye-Regular.ttf')",`url('${font}')`);
 for(const [id,name]of Object.entries(ASSETS))css=css.split(`url('${name}')`).join(`var(--asset-${id})`);
 const configure='for(const [id,url]of Object.entries(ASSETS))document.documentElement.style.setProperty(`--asset-${id}`,`url("${url}")`);\n';
-const script=`(()=>{\n${secrets}${core}${assets}${soundBank}${audioSource}${configure}${strip(await read('game.js'))}\n})();`;
+const script=`(()=>{\n${secrets}${core}${assets}${presentation}${soundBank}${audioSource}${configure}${strip(await read('game.js'))}\n})();`;
 const icon='data:image/svg+xml;base64,'+(await readFile(path.join(root,'icon.svg'))).toString('base64');
 const fontLicense=(await read('fonts/OFL.txt')).replaceAll('--','—');
 let html=(await read('index.html')).replace('<link rel="stylesheet" href="style.css">',`<!-- Bundled Rye font license:\n${fontLicense}\n--><style>${css}</style>`).replace('href="icon.svg"',`href="${icon}"`).replace('<script type="module" src="game.js"></script>',`<script>${script}</script>`);
