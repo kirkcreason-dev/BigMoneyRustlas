@@ -59,3 +59,26 @@ select{background:#f5dfb3;border:1px solid #92613a;color:#382419}.toggle{border:
 
 @media(max-width:640px){.home{background-image:url('art/title-frontier.png'),linear-gradient(#24566b 0 38%,#6a3a1d 62%,#24130c 85%);background-size:100% auto,100% 100%;background-position:center 47%,center}.home:before{background:linear-gradient(#162f3b55,transparent 32%,transparent 55%,#24130c88 72%,#24130c 100%)}}
 .settings-dialog{padding:24px 32px}.settings-dialog .settings-row{padding:9px 0}.settings-dialog h2{font-size:42px;margin:10px 0 14px}@media(max-width:640px){.settings-dialog{padding:20px}.settings-dialog h2{font-size:30px}}
+
+/* Supplied studio mark stays exact; the surrounding intro supplies the animation. */
+.studio-intro{position:relative;min-height:100dvh;overflow:hidden;background:#0c0e12;color:#eef3f7;isolation:isolate}
+.studio-intro:before{content:'';position:absolute;inset:0;z-index:-1;opacity:.42;background:radial-gradient(ellipse at 50% 85%,#07547855,transparent 62%);transition:opacity .8s}
+.intro-stage{position:absolute;inset:0 20px 70px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0;visibility:hidden;transition:opacity .55s,visibility .55s;pointer-events:none}
+.intro-studio img{width:min(540px,86vw);height:auto;display:block}
+.intro-overline,.intro-presents{font:700 10px Arial,sans-serif;letter-spacing:.42em;color:#afbbc7}.intro-overline{margin-bottom:34px}.intro-presents{margin-top:28px;color:#b9c7d0}
+.intro-rule{height:2px;width:100px;background:linear-gradient(90deg,transparent,#20bafd,transparent);margin-top:34px}
+.intro-game img{width:min(610px,80vw);height:auto;filter:drop-shadow(0 5px 0 #0008)}
+.intro-game-label{font:11px var(--western);letter-spacing:.1em;color:#edbd51;margin-top:22px}.intro-game p{font:14px var(--western);color:#e6ce9e;margin:24px 0 0;padding:0 16px}
+.studio-intro[data-intro=studio] .intro-studio,.studio-intro[data-intro=game] .intro-game{opacity:1;visibility:visible;animation:intro-arrive .9s ease-out both}
+.studio-intro[data-intro=game]:before{opacity:.15}
+.intro-bottom{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));left:clamp(18px,4vw,52px);right:clamp(18px,4vw,52px);display:flex;justify-content:space-between;gap:20px;align-items:center}
+.intro-bottom>span{color:#8796a5;font:700 9px Arial,sans-serif;letter-spacing:.15em}
+.intro-skip{background:#151e27;border:1px solid #597180;padding:13px 18px;color:#e3edf5;font:700 11px Arial,sans-serif;letter-spacing:.06em;min-height:44px}
+.studio-brand{padding:0;border:1px solid #a47a4555;background:#0c0e12;line-height:0;flex-shrink:0}.studio-brand img{display:block;width:178px;height:auto}.home-foot{margin-top:20px}
+.credits-studio{margin:25px 0 20px;background:#0c0e12;display:block;padding:12px 16px;width:min(312px,100%)}.credits-studio img{width:min(280px,100%);height:auto;display:block}
+.loading-studio{width:178px;height:auto;position:absolute;bottom:28px;background:#0c0e12}
+@keyframes intro-arrive{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.intro-still .intro-stage{animation:none!important;transition:none!important;transform:none!important}
+@media(prefers-reduced-motion:reduce){.studio-intro .intro-stage,.studio-intro:before{animation:none!important;transition:none!important;transform:none!important}}
+@media(max-width:640px){.intro-overline{margin-bottom:25px}.intro-studio img{width:88vw}.intro-game img{width:90vw}.intro-game p{font-size:12px;line-height:1.7;max-width:280px}.intro-game-label{font-size:9px;letter-spacing:.04em}.intro-bottom>span{font-size:8px}.studio-brand img{width:150px}.home-foot{gap:12px}.home-foot>span{max-width:120px;line-height:1.8}.loading-studio{bottom:20px}}
+@media(max-height:550px) and (min-width:641px){.intro-stage{inset:0 20px 45px}.intro-overline{margin-bottom:15px}.intro-studio img{width:min(444px,65vw)}.intro-rule{margin-top:15px}.intro-presents{margin-top:15px}.intro-game img{width:330px;max-width:65vw}.intro-game-label{margin-top:5px;font-size:9px}.intro-game p{margin-top:12px;font-size:12px}.intro-bottom{bottom:13px}.home-foot{margin-top:10px}.studio-brand img{width:135px}.loading-studio{bottom:12px;width:135px}}

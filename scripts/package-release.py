@@ -14,7 +14,7 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.2
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.3
 
 Open BigMoneyRustlas.html in a modern browser to play. All images and all 46 original
 sound assets are embedded. If your browser restricts local HTML or saving, use the
@@ -32,6 +32,12 @@ CONTROLS
 A/D or arrows: move. Space: jump (hold for height). J: fire. K: pimp hand.
 Shift: dodge. R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
 From chapter seven onward, Sugar uses the pimp hand instead of the injured gun hand.
+
+STUDIO INTRO
+The supplied CREASO·NORSE logo opens a six-second studio/title intro. Skip with the
+on-screen button, Enter, Space or Escape; replay from the title-screen logo or Credits.
+The logo also appears on the loading screen and in the credits. Reduced-motion mode
+uses static cards. The supplied logo is embedded unchanged in the single-file game.
 
 ORIGINAL POSTER STYLE
 Red-and-gold title lettering, cyan skies, orange desert, weathered paper menus, and
@@ -73,4 +79,4 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.2\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.3\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])

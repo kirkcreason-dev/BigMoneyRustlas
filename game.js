@@ -6,7 +6,7 @@ import { ASSETS, FRAMES, backgroundUrl } from './src/assets.js';
 
 const $=id=>document.getElementById(id), canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const SAVE_KEY='rustlas_save_v2';
-let save=defaultSave(),storageOK=true,game=null,mode='loading',menuReturn='home',lastTime=0,accumulator=0,toastTimer,assetsReady=false;
+let save=defaultSave(),storageOK=true,game=null,mode='loading',menuReturn='home',lastTime=0,accumulator=0,toastTimer,introTimers=[],assetsReady=false;
 const images={},crops={},spriteViews={},keys=new Set(),touchHeld=new Set(),edges={},previousPad={},holdPointers=new Map();
 let touchDevice=matchMedia('(pointer:coarse)').matches,padConnected=false,hudCache={};
 try { const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem('rustlas_save_v1');save=sanitizeSave(raw?JSON.parse(raw):null); } catch {storageOK=false;}
@@ -23,6 +23,7 @@ const btn=(label,action,kind='secondary',extra='')=>`<button class="${kind}" dat
 const header=(eyebrow,title,sub='',right='')=>`<div class="panel-header"><div class="panel-heading"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2>${sub?`<p>${sub}</p>`:''}</div>${right||btn('← Back','home','text-button')}</div>`;
 const balance=()=>`<div class="balance"><small>YOUR GOLD</small>◈ ${save.coins}</div>`;
 function show(html,nextMode){
+  for(const timer of introTimers)clearTimeout(timer);introTimers=[];
   mode=nextMode;clearInput();accumulator=0;$('menu').innerHTML=html;$('menu').scrollTop=0;
   for(const cv of $('menu').querySelectorAll('[data-portrait]')){const name=cv.dataset.portrait,im=images[name],r=crops[name];if(im&&r){const c=cv.getContext('2d'),h=570,w=h*r.w/r.h;const view=spriteViews[name],scale=h/r.h;c.drawImage(view,0,0,view.width,view.height,(480-w)/2-2*scale,600-h-2*scale,w+4*scale,h+4*scale);}}
   const playing=mode==='playing';$('hud').hidden=!playing;$('touch').hidden=!playing||!(touchDevice||save.settings.touch);$('hint').hidden=!playing;
@@ -30,9 +31,16 @@ function show(html,nextMode){
   if(playing){audio.musicPlay();$('hint').textContent=hintText(game.secretPrompt||game.lastSign);}else{audio.pause(mode==='paused');}
   if(html)requestAnimationFrame(()=>{const el=$('menu').querySelector('button.primary:not(:disabled)')||$('menu').querySelector('button:not(:disabled),select,input[type=range]');el?.focus({preventScroll:true});});
 }
+function intro(){
+  clearTimeout(toastTimer);$('toast').classList.remove('show');
+  const still=!save.settings.motion||matchMedia('(prefers-reduced-motion: reduce)').matches;
+  show(`<div class="studio-intro ${still?'intro-still':''}" data-intro="studio"><h1 class="sr-only">CREASO·NORSE presents Big Money Rustlas</h1><div class="intro-stage intro-studio" aria-hidden="true"><span class="intro-overline">A GAME BY</span><img src="${ASSETS.studio}" alt="" width="444" height="90"><span class="intro-rule"></span><span class="intro-presents">PRESENTS</span></div><div class="intro-stage intro-game" aria-hidden="true"><img src="${ASSETS.logo}" alt="" width="1774" height="887"><span class="intro-game-label">THE FIRST OFFICIAL VIDEO GAME</span><p>A badge. Six bullets. A town to take back.</p></div><div class="intro-bottom"><span>CREASO·NORSE</span>${btn('Skip intro →','skip-intro','intro-skip')}</div></div>`,'intro');
+  introTimers.push(setTimeout(()=>{const screen=$('menu').querySelector('.studio-intro');if(mode==='intro'&&screen)screen.dataset.intro='game';},2700));
+  introTimers.push(setTimeout(()=>{if(mode==='intro')home();},6100));
+}
 function home(){
   const continuation=save.run?`CONTINUE CHAPTER ${save.run.chapter}`:save.unlocked>1&&!save.beaten?`RIDE ON · CHAPTER ${save.unlocked}`:save.beaten?'RIDE AGAIN':'START YOUR STORY';
-  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><h1><img class="title-wordmark" src="${ASSETS.logo}" alt="Big Money Rustlas"></h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Field guide','guide')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><span>THE OFFICIAL BIG MONEY RUSTLAS GAME</span><span>KEYBOARD · CONTROLLER · TOUCH</span><button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.2</button></footer></div></div>`,'home');
+  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><h1><img class="title-wordmark" src="${ASSETS.logo}" alt="Big Money Rustlas"></h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Field guide','guide')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><button class="studio-brand" data-action="intro" aria-label="Replay CREASO NORSE intro"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></button><span>KEYBOARD · CONTROLLER · TOUCH</span><button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.3</button></footer></div></div>`,'home');
 }
 function chapters(){
   const completed=Object.keys(save.best).length,badges=Object.values(save.best).reduce((n,b)=>n+b.relics,0);
@@ -74,7 +82,7 @@ function ending(){
   show(`<div class="center-screen ending"><div class="dialog"><span class="eyebrow">MUD BUG IS FREE</span><h2>Some legends<br>run in the family.</h2><p>Chips falls. Beneath the gold and the paint is Grizzly Wolf—Sugar’s own father. The truth lands harder than any bullet. But the badge still means something.</p><p>With the town free and the road quiet, Sugar Wolf rides into the sunset. Mud Bug will remember its sheriff.</p><div class="story-quote">“A town worth saving. A story worth telling.”</div><div class="credits">BIG MONEY RUSTLAS<br>THE FIRST OFFICIAL VIDEO GAME<br><br>You completed all eight chapters. Return to the trail to find all 24 lost badges and set new records.</div><div class="button-row">${btn('Back to the trail','chapters','primary')}${btn('Credits','credits')}</div></div></div>`,'ending');
 }
 function credits(){
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits">FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>Original poster styling, illustrated worlds, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>Rye typeface © Sorkin Type Co · SIL Open Font License.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.2<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
+  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits-studio"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></div><div class="credits">A CREASO·NORSE GAME<br><br>FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>Original poster styling, illustrated worlds, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>Rye typeface © Sorkin Type Co · SIL Open Font License.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.3<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${btn('Replay intro','intro')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
 }
 function journal(){
   const all=save.secrets.length===SECRETS.length;
@@ -83,7 +91,8 @@ function journal(){
 function back(where){if(where==='paused'&&game)pause();else if(where==='chapters')chapters();else if(where==='results'&&game?.result)results(game.result);else home();}
 function action(value){
   const [name,arg]=value.split(':');audio.init();audio.sfx('click');
-  if(name==='continue'){if(save.run)start(save.run.chapter,true);else story(save.beaten?1:save.unlocked);}
+  if(name==='intro')intro();else if(name==='skip-intro')home();
+  else if(name==='continue'){if(save.run)start(save.run.chapter,true);else story(save.beaten?1:save.unlocked);}
   else if(name==='home')home();else if(name==='chapters')chapters();else if(name==='chapter')story(Number(arg));else if(name==='start')start(Number(arg));
   else if(name==='resume')resume();else if(name==='restart')start(game.chapter);else if(name==='quit'){saveRun();home();}
   else if(['shop','settings','guide','journal'].includes(name)){if(!['shop','settings','guide','journal'].includes(mode))menuReturn=mode;({shop,settings,guide,journal})[name]();}
@@ -104,6 +113,7 @@ const keyActions={Space:'jump',KeyW:'jump',ArrowUp:'jump',KeyR:'reload',ShiftLef
 const gameKeys=new Set(['Space','KeyW','ArrowUp','KeyR','ShiftLeft','ShiftRight','ArrowLeft','ArrowRight','ArrowDown','KeyA','KeyD','KeyS','KeyJ','KeyK','KeyX','KeyC','KeyE','Escape','KeyP']);
 addEventListener('keydown',e=>{
   if(!assetsReady)return;
+  if(mode==='intro'&&['Enter','Space','Escape'].includes(e.code)){e.preventDefault();if(!e.repeat)home();return;}
   if(e.code==='Tab'&&mode!=='playing'){
     const list=[...$('menu').querySelectorAll('button:not(:disabled),select,input[type=range]')];if(list.length){const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}return;
   }
@@ -330,7 +340,7 @@ async function loadAssets(){
     }
     spriteViews[name]=viewCache.get(key);
   }
-  assetsReady=true;$('loading').hidden=true;resize();home();lastTime=performance.now();requestAnimationFrame(frame);
+  assetsReady=true;$('loading').hidden=true;resize();intro();lastTime=performance.now();requestAnimationFrame(frame);
   if(!storageOK)toast('Browser storage is unavailable. Progress will last for this session.');
 }
 loadAssets();

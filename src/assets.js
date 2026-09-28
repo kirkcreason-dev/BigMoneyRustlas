@@ -1,7 +1,7 @@
 // Sprite frames are source rectangles in original transparent atlases.
 // J and Shaggy references were authorized by the project owner; other likenesses are excluded.
 export const ASSETS={
-  logo:'art/title-wordmark.png',
+  logo:'art/title-wordmark.png',studio:'art/creaso-norse.png',
   title:'art/title-frontier.png',bg_island:'art/desert.png',bg_town:'art/town.png',bg_saloon:'art/saloon.png',bg_hideout:'art/hideout.png',bg_woodland:'art/woodland.png',
   hero:'art/sugar-wolf.png',outlaws:'art/outlaws.png',bosses:'art/bosses.png',terrain:'art/terrain.png',hack:'art/hack-benjamin.png',pimp:'art/pimp-hand.png',elastic:'art/pimp-hand-elastic.png'
 };

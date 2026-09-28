@@ -14,6 +14,8 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 
 ## The game
 
+- CREASO·NORSE studio intro, supplied logo on loading/title/credits screens, keyboard/touch skip and replay.
+
 - Eight authored chapters, optional elevated routes, three lost badges in each chapter, and checkpoint wells.
 - Four boss fights with attack warnings and recovery windows. Chips has a second, enraged phase.
 - Six-shot revolver, automatic reloads, dodge rolls, variable-height jumping, elastic slaps with matching long-range hits, projectile returns, and a eight-pose pimp-hand atlas plus three supernatural extension/recoil poses.
@@ -24,6 +26,10 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 - Keyboard, touch controls, and standard gamepad mappings. Reduced screen effects and separate sound/music settings.
 
 The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
+
+## Studio intro
+
+The owner-supplied CREASO·NORSE logo opens a 6.1-second studio/title sequence. Skip with its button, Enter, Space or Escape; replay by clicking the title-footer logo or Replay intro in Credits. The logo is copied unchanged and embedded in the offline build. Reduced-motion preferences remove the movement/fades. The intro is visual and does not require audio autoplay.
 
 ## Controls
 

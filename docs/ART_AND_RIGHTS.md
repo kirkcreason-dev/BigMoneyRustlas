@@ -16,7 +16,7 @@ Selected frames and rendered English captions were reviewed from the authorized 
 
 ## Generated assets
 
-All raster assets in `art/` were newly generated using the built-in ImageGen tool. Version 2.2 restyles every asset to the owner-supplied original movie posters: red/gold lettering, cyan sky, orange earth, brown corduroy, gold suits, and coarse printed illustration. Exact current prompts and saved files are in `OG_STYLE.md`. Asset revision modes and prompt directions are recorded below. Exact frame rectangles and any drawing exclusions are in `src/assets.js`; the original PNGs remain intact.
+The 14 original game raster assets in `art/` were generated using the built-in ImageGen tool. `creaso-norse.png` is the exact logo PNG supplied by the owner on September 28, 2026, copied without pixel changes; it is used in the studio intro, loading screen, title footer and credits. Version 2.2 restyles every asset to the owner-supplied original movie posters: red/gold lettering, cyan sky, orange earth, brown corduroy, gold suits, and coarse printed illustration. Exact current prompts and saved files are in `OG_STYLE.md`. Asset revision modes and prompt directions are recorded below. Exact frame rectangles and any drawing exclusions are in `src/assets.js`; the original PNGs remain intact.
 
 | File | Use | Mode and prompt direction |
 |---|---|---|
