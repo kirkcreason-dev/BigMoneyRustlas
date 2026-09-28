@@ -16,25 +16,30 @@ Selected frames and rendered English captions were reviewed from the authorized 
 
 ## Generated assets
 
-All raster assets in `art/` were newly generated using the built-in ImageGen tool. They use hand-inked Western illustration, transparent character atlases, warm earth colors, and bold silhouettes. Asset revision modes and prompt directions are recorded below. Exact frame rectangles and any drawing exclusions are in `src/assets.js`; the original PNGs remain intact.
+All raster assets in `art/` were newly generated using the built-in ImageGen tool. Version 2.2 restyles every asset to the owner-supplied original movie posters: red/gold lettering, cyan sky, orange earth, brown corduroy, gold suits, and coarse printed illustration. Exact current prompts and saved files are in `OG_STYLE.md`. Asset revision modes and prompt directions are recorded below. Exact frame rectangles and any drawing exclusions are in `src/assets.js`; the original PNGs remain intact.
 
 | File | Use | Mode and prompt direction |
 |---|---|---|
-| `title-frontier.png` | Title backdrop | Generate: wide frontier street at sunset, two original cowboy silhouettes framing clear title space. Edit: remove all power/telegraph poles and wires. |
+| `title-wordmark.png` | Title lettering | Original poster-inspired red BIG MONEY / gold RUSTLAS, skull and sheriff star, true transparency. |
+| `title-frontier.png` | Title backdrop | Authorized J in gold and Shaggy in brown frame a bright Western street with clear title space. |
 | `desert.png` | Dusty Plains | Generate: layered mesas, cactus, distant town, clear foreground. Edit: remove poles and wires. |
 | `town.png` | Mud Bug and final showdown | Generate: illustrated frontier street and timber storefronts, no people, empty gameplay space. |
 | `saloon.png` | Interior chapters | Generate: wooden bar, lamps, balcony/rafters, warm light, no people, clear foreground. |
 | `hideout.png` | Additional environment asset | Generate: original timber/stone outlaw vault, gold, warm lamps, no people. Included for future level use. |
 | `woodland.png` | Sanchez's training | Generate: California oak woodland, creek bed, distant shack, exaggerated wooden training arm, olive/honey palette, no people or modern utilities. |
 | `terrain.png` | Eight ground/platform pieces | Generate: 2 columns × 4 rows; sandstone, boardwalk timber, gray bedrock, reinforced stone; transparent isolated pieces with flat traversable tops. |
-| `sugar-wolf.png` | Eight movement/gun poses | Generate original atlas, then edit against authorized supplied Sugar sprite: Shaggy's Sugar Wolf face/paint, brown hat, fringed brown coat, waistcoat, blue shirt, gloves. Idle, three walks, jump, shooting, slap, crouch. |
+| `sugar-wolf.png` | Eight movement/gun poses | Generate original atlas, then edit against authorized supplied Sugar sprite: Shaggy's Sugar Wolf face/paint, brown hat, smooth brown corduroy coat, brick-red shirt, cream paisley tie, yellow gloves. Idle, three walks, jump, shooting, slap, crouch. |
 | `pimp-hand.png` | Eight slap poses | Edit/new animation derived from Sugar atlas: ready, wind-up, swing, impact, follow-through, recovery, airborne slap, low slap; exaggerated active palm, same Shaggy likeness and outfit; transparent 4 × 2 atlas. |
 | `pimp-hand-elastic.png` | Three supernatural slap poses | Edit from pimp-hand atlas: preserve Sugar’s appearance; three horizontal rows showing long launch, maximum arm extension to three body heights, and S-curved elastic recoil. Continuous sleeve ending in oversized open palm, right-facing, full body, transparent. |
-| `bosses.png` | Four bosses, two poses each | Generate, then edit into comic frontier costumes: covered-face red-suited Stank; covered-face blue dollar waistcoat Poot; covered-face stove-shield Tank; authorized J likeness for Chips with purple/gold idle and full gold action costume. |
+| `bosses.png` | Four bosses, two poses each | Generate, then edit into comic frontier costumes: covered-face red-suited Stank; covered-face blue dollar waistcoat Poot; covered-face stove-shield Tank; authorized J likeness for Chips with gold suit, black shirt and concho hat in both idle and action poses. |
 | `outlaws.png` | Seven enemy types and Sanchez | Generate: original concealed-face bandit, rifleman, supernatural outlaw, gambler, pie thrower, bruiser, oversized boot enemy, and original mentor silhouette. No performer likeness references. |
 | `hack-benjamin.png` | Two cameo poses | Generate from observed Rustlas costume description: black cloth face covering, broad flat black hat, glossy coat, silver floral shoulder embroidery, black gloves; idle and hat-tip poses. |
 
 The star icon, coins, wells, discovery props, interface, and effects are original vector/canvas drawings. The 46 audio assets in `sound/` are original digital synthesis from `scripts/design-sounds.py`; the guitar score and mixer are in `src/audio.js`. See `SOUND_DESIGN.md`. Generated character art is stylized interpretation, not a guarantee of exact likeness or costume continuity.
+
+## Font
+
+Rye by Sorkin Type Co (2011), distributed under SIL Open Font License 1.1. The font and full license are in `fonts/`; the license is also embedded in the self-contained HTML. Official source: https://github.com/google/fonts/tree/main/ofl/rye
 
 ## New game material
 

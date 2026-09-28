@@ -8,7 +8,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const dist=path.join(root,'dist');
 await mkdir(dist,{recursive:true});
 // Explicit allowlist: inherited portraits, film stills, and theme.m4a never ship.
-for(const name of ['index.html','style.css','game.js','icon.svg','src'])await cp(path.join(root,name),path.join(dist,name),{recursive:true});
+for(const name of ['index.html','style.css','game.js','icon.svg','src','fonts'])await cp(path.join(root,name),path.join(dist,name),{recursive:true});
 await rm(path.join(dist,'art'),{recursive:true,force:true});
 await mkdir(path.join(dist,'art'),{recursive:true});
 const data={};
@@ -36,11 +36,15 @@ const assets=wrap(assetSource,'ASSETS,FRAMES,backgroundUrl');
 const soundBank=`const SOUND_ASSETS=${JSON.stringify(soundData)};\n`;
 const audioSource=wrap(await read('src/audio.js'),'SoundEngine,soundScene,soundCue');
 let css=await read('style.css');
+const font='data:font/ttf;base64,'+(await readFile(path.join(root,'fonts/Rye-Regular.ttf'))).toString('base64');
+css=css.replace("url('fonts/Rye-Regular.ttf')",`url('${font}')`);
 for(const [id,name]of Object.entries(ASSETS))css=css.split(`url('${name}')`).join(`var(--asset-${id})`);
 const configure='for(const [id,url]of Object.entries(ASSETS))document.documentElement.style.setProperty(`--asset-${id}`,`url("${url}")`);\n';
 const script=`(()=>{\n${secrets}${core}${assets}${soundBank}${audioSource}${configure}${strip(await read('game.js'))}\n})();`;
 const icon='data:image/svg+xml;base64,'+(await readFile(path.join(root,'icon.svg'))).toString('base64');
-const html=(await read('index.html')).replace('<link rel="stylesheet" href="style.css">',`<style>${css}</style>`).replace('href="icon.svg"',`href="${icon}"`).replace('<script type="module" src="game.js"></script>',`<script>${script}</script>`);
+const fontLicense=(await read('fonts/OFL.txt')).replaceAll('--','—');
+let html=(await read('index.html')).replace('<link rel="stylesheet" href="style.css">',`<!-- Bundled Rye font license:\n${fontLicense}\n--><style>${css}</style>`).replace('href="icon.svg"',`href="${icon}"`).replace('<script type="module" src="game.js"></script>',`<script>${script}</script>`);
+for(const [id,name]of Object.entries(ASSETS))html=html.replaceAll(`src="${name}"`,`src="${data[id]}"`);
 // The brand mark is authored in a JS template, so inline that image too.
 await writeFile(path.join(dist,'BigMoneyRustlas.html'),html.replaceAll('src="icon.svg"',`src="${icon}"`));
 console.log(`Built static site and self-contained offline game in ${dist}`);

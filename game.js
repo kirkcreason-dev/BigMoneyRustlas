@@ -7,7 +7,7 @@ import { ASSETS, FRAMES, backgroundUrl } from './src/assets.js';
 const $=id=>document.getElementById(id), canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const SAVE_KEY='rustlas_save_v2';
 let save=defaultSave(),storageOK=true,game=null,mode='loading',menuReturn='home',lastTime=0,accumulator=0,toastTimer,assetsReady=false;
-const images={},crops={},keys=new Set(),touchHeld=new Set(),edges={},previousPad={},holdPointers=new Map();
+const images={},crops={},spriteViews={},keys=new Set(),touchHeld=new Set(),edges={},previousPad={},holdPointers=new Map();
 let touchDevice=matchMedia('(pointer:coarse)').matches,padConnected=false,hudCache={};
 try { const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem('rustlas_save_v1');save=sanitizeSave(raw?JSON.parse(raw):null); } catch {storageOK=false;}
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch{if(storageOK)toast('Saving is unavailable in this browser. Keep this tab open to continue.');storageOK=false;}}
@@ -24,7 +24,7 @@ const header=(eyebrow,title,sub='',right='')=>`<div class="panel-header"><div cl
 const balance=()=>`<div class="balance"><small>YOUR GOLD</small>◈ ${save.coins}</div>`;
 function show(html,nextMode){
   mode=nextMode;clearInput();accumulator=0;$('menu').innerHTML=html;$('menu').scrollTop=0;
-  for(const cv of $('menu').querySelectorAll('[data-portrait]')){const name=cv.dataset.portrait,im=images[name],r=crops[name];if(im&&r){const c=cv.getContext('2d'),h=570,w=h*r.w/r.h;c.drawImage(im,r.x,r.y,r.w,r.h,(480-w)/2,600-h,w,h);}}
+  for(const cv of $('menu').querySelectorAll('[data-portrait]')){const name=cv.dataset.portrait,im=images[name],r=crops[name];if(im&&r){const c=cv.getContext('2d'),h=570,w=h*r.w/r.h;const view=spriteViews[name],scale=h/r.h;c.drawImage(view,0,0,view.width,view.height,(480-w)/2-2*scale,600-h-2*scale,w+4*scale,h+4*scale);}}
   const playing=mode==='playing';$('hud').hidden=!playing;$('touch').hidden=!playing||!(touchDevice||save.settings.touch);$('hint').hidden=!playing;
   document.body.classList.toggle('touch-mode',touchDevice||save.settings.touch);
   if(playing){audio.musicPlay();$('hint').textContent=hintText(game.secretPrompt||game.lastSign);}else{audio.pause(mode==='paused');}
@@ -32,7 +32,7 @@ function show(html,nextMode){
 }
 function home(){
   const continuation=save.run?`CONTINUE CHAPTER ${save.run.chapter}`:save.unlocked>1&&!save.beaten?`RIDE ON · CHAPTER ${save.unlocked}`:save.beaten?'RIDE AGAIN':'START YOUR STORY';
-  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><span class="title-star">★</span><h1><span>BIG MONEY</span>RUSTLAS</h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Field guide','guide')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><span>THE OFFICIAL BIG MONEY RUSTLAS GAME</span><span>KEYBOARD · CONTROLLER · TOUCH</span><button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.1</button></footer></div></div>`,'home');
+  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><h1><img class="title-wordmark" src="${ASSETS.logo}" alt="Big Money Rustlas"></h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Field guide','guide')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><span>THE OFFICIAL BIG MONEY RUSTLAS GAME</span><span>KEYBOARD · CONTROLLER · TOUCH</span><button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.2</button></footer></div></div>`,'home');
 }
 function chapters(){
   const completed=Object.keys(save.best).length,badges=Object.values(save.best).reduce((n,b)=>n+b.relics,0);
@@ -74,7 +74,7 @@ function ending(){
   show(`<div class="center-screen ending"><div class="dialog"><span class="eyebrow">MUD BUG IS FREE</span><h2>Some legends<br>run in the family.</h2><p>Chips falls. Beneath the gold and the paint is Grizzly Wolf—Sugar’s own father. The truth lands harder than any bullet. But the badge still means something.</p><p>With the town free and the road quiet, Sugar Wolf rides into the sunset. Mud Bug will remember its sheriff.</p><div class="story-quote">“A town worth saving. A story worth telling.”</div><div class="credits">BIG MONEY RUSTLAS<br>THE FIRST OFFICIAL VIDEO GAME<br><br>You completed all eight chapters. Return to the trail to find all 24 lost badges and set new records.</div><div class="button-row">${btn('Back to the trail','chapters','primary')}${btn('Credits','credits')}</div></div></div>`,'ending');
 }
 function credits(){
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits">FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>New illustrated environments, terrain, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.1<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
+  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits">FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>Original poster styling, illustrated worlds, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>Rye typeface © Sorkin Type Co · SIL Open Font License.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.2<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
 }
 function journal(){
   const all=save.secrets.length===SECRETS.length;
@@ -179,9 +179,10 @@ function processEvents(){
 function sprite(name,x,y,h,flip=false,alpha=1){
   const im=images[name];if(!im)return;const r=crops[name]||{x:0,y:0,w:im.width,h:im.height},w=h*r.w/r.h;
   ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);if(flip !== (FRAMES[name]?.baseFacing===-1))ctx.scale(-1,1);
-  const omit=FRAMES[name]?.omit;
-  if(omit){const scale=h/r.h;ctx.beginPath();ctx.rect(-w/2,-h,w,h);for(const q of omit)ctx.rect(-w/2+(q.x-r.x)*scale,-h+(q.y-r.y)*scale,q.w*scale,q.h*scale);ctx.clip('evenodd');}
-  ctx.drawImage(im,r.x,r.y,r.w,r.h,-w/2,-h,w,h);ctx.restore();
+  const view=spriteViews[name],scale=h/r.h;
+  if(view)ctx.drawImage(view,0,0,view.width,view.height,-w/2-2*scale,-h-2*scale,w+4*scale,h+4*scale);
+  else ctx.drawImage(im,r.x,r.y,r.w,r.h,-w/2,-h,w,h);
+  ctx.restore();
 }
 function shadow(x,y,w){ctx.fillStyle='#160d0844';ctx.beginPath();ctx.ellipse(x,y,w,6,0,0,Math.PI*2);ctx.fill();}
 function text(s,x,y,size=12,color='#f8e1ad',align='center',font='Arial'){ctx.font=`bold ${size}px ${font}`;ctx.textAlign=align;ctx.fillStyle=color;ctx.shadowColor='#100b09';ctx.shadowBlur=4;ctx.fillText(s,x,y);ctx.shadowBlur=0;}
@@ -211,7 +212,7 @@ function drawWorld(g){
   const w=g.world,t=g.time,bg=images[w.def.bg];ctx.fillStyle='#19120e';ctx.fillRect(0,0,WIDTH,HEIGHT);
   if(bg){const bh=HEIGHT,bw=bg.width/bg.height*bh,off=-(g.cam*.23)%bw;for(let x=off-bw;x<WIDTH;x+=bw)ctx.drawImage(bg,x,0,bw,bh);}
   if(g.chapter===7){ctx.fillStyle='#57738626';ctx.fillRect(0,0,WIDTH,HEIGHT);}if(g.chapter===5){ctx.fillStyle='#20162050';ctx.fillRect(0,0,WIDTH,HEIGHT);}
-  const atmosphere=ctx.createLinearGradient(0,0,0,HEIGHT);atmosphere.addColorStop(0,'#1a100622');atmosphere.addColorStop(.6,'#1a100600');atmosphere.addColorStop(1,'#1a100666');ctx.fillStyle=atmosphere;ctx.fillRect(0,0,WIDTH,HEIGHT);
+  const atmosphere=ctx.createLinearGradient(0,0,0,HEIGHT);atmosphere.addColorStop(0,'#1a100608');atmosphere.addColorStop(.6,'#1a100600');atmosphere.addColorStop(1,'#1a100666');ctx.fillStyle=atmosphere;ctx.fillRect(0,0,WIDTH,HEIGHT);
   const shake=save.settings.motion&&g.shake>0?(Math.random()-.5)*g.shake*32:0;ctx.save();ctx.translate(-Math.round(g.cam)+shake,shake*.4);
   drawPlatforms(g);
   drawSecrets(g);
@@ -225,7 +226,7 @@ function drawWorld(g){
   if(!w.boss||w.boss.dead){ctx.globalAlpha=.2+.1*Math.sin(t*3);ctx.fillStyle='#ffdc7b';ctx.fillRect(exit+93,FLOOR-180,4,180);ctx.globalAlpha=1;}
   for(const c of w.pickups){if(c.got||c.x<g.cam-50||c.x>g.cam+WIDTH+50)continue;const bob=Math.sin(t*3+c.x)*4;
     if(c.type==='coin'){ctx.fillStyle='#e2ad4e';ctx.beginPath();ctx.ellipse(c.x,c.y+bob,Math.max(3,Math.abs(Math.cos(t*4+c.x))*11),13,0,0,7);ctx.fill();ctx.strokeStyle='#ffe4a0';ctx.lineWidth=2;ctx.stroke();}
-    else if(c.type==='relic'){ctx.save();ctx.shadowColor='#ffc852';ctx.shadowBlur=18;drawStar(c.x,c.y+bob,19,'#f6ca6b');ctx.restore();drawStar(c.x,c.y+bob,10,'#8a562b');text('R',c.x,c.y+5+bob,11,'#f8d78f','center','Georgia');}
+    else if(c.type==='relic'){ctx.save();ctx.shadowColor='#ffc852';ctx.shadowBlur=18;drawStar(c.x,c.y+bob,19,'#f6ca6b');ctx.restore();drawStar(c.x,c.y+bob,10,'#8a562b');text('R',c.x,c.y+5+bob,11,'#f8d78f','center','Rye');}
     else{ctx.fillStyle='#23402c';ctx.fillRect(c.x-14,c.y-14+bob,28,28);ctx.strokeStyle='#a7c99a';ctx.strokeRect(c.x-14,c.y-14+bob,28,28);ctx.fillStyle='#c5e0b1';ctx.fillRect(c.x-3,c.y-10+bob,6,20);ctx.fillRect(c.x-10,c.y-3+bob,20,6);}
   }
   for(const e of w.enemies){if(e.dead||e.x<g.cam-130||e.x>g.cam+WIDTH+130)continue;shadow(e.x+e.w/2,FLOOR,25);const bob=e.attack==='walk'?Math.sin(e.t*10)*2:0;
@@ -267,8 +268,7 @@ function drawWorld(g){
   ctx.save();if(FRAMES[name]?.bodyHeight){
     const f=FRAMES[name],scale=109/f.bodyHeight,xScale=scale*(g.items.slap?1.18:1),r=crops[name];
     ctx.translate(p.x+p.w/2,p.y+p.h+2);ctx.scale(p.dir*xScale,scale);ctx.globalAlpha=alpha;
-    ctx.beginPath();ctx.rect(r.x-f.anchorX,r.y-f.baseY,r.w,r.h);for(const q of f.omit||[])ctx.rect(q.x-f.anchorX,q.y-f.baseY,q.w,q.h);ctx.clip('evenodd');
-    ctx.drawImage(images[name],r.x,r.y,r.w,r.h,r.x-f.anchorX,r.y-f.baseY,r.w,r.h);
+    const view=spriteViews[name];ctx.drawImage(view,r.x-f.anchorX-2,r.y-f.baseY-2);
   }else if(p.roll>0){ctx.translate(p.x+p.w/2,p.y+p.h-24);ctx.rotate(p.dir*(1-p.roll/.26)*Math.PI*2);sprite(name,0,35,playerHeight,p.dir<0,alpha);}else sprite(name,p.x+p.w/2,p.y+p.h+2,playerHeight,p.dir<0,alpha);ctx.restore();
   if(p.action>0&&p.actionKind==='slap'&&slapPose(p.action)==='extend'){
     const tip=p.x+p.w/2+p.dir*slapReach(p.action,g.items.slap);
@@ -279,7 +279,7 @@ function drawWorld(g){
   if(g.shield){ctx.strokeStyle='#c8dfa77a';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h/2,38,60,0,0,7);ctx.stroke();}
   for(const q of g.particles){ctx.globalAlpha=clamp(q.life/q.max,0,1);ctx.fillStyle=q.color;ctx.fillRect(q.x-q.r/2,q.y-q.r/2,q.r,q.r);}ctx.globalAlpha=1;
   for(const f of g.texts){ctx.globalAlpha=Math.min(1,f.life*2);text(f.text,f.x,f.y,12,f.color);}ctx.globalAlpha=1;ctx.restore();
-  if(g.dead){ctx.fillStyle='#160c08aa';ctx.fillRect(0,0,WIDTH,HEIGHT);text('BACK IN THE SADDLE…',WIDTH/2,HEIGHT/2,30,'#efd4a1','center','Georgia');}
+  if(g.dead){ctx.fillStyle='#160c08aa';ctx.fillRect(0,0,WIDTH,HEIGHT);text('BACK IN THE SADDLE…',WIDTH/2,HEIGHT/2,30,'#efd4a1','center','Rye');}
   if(g.combo>1&&g.comboTimer>0)text(`${g.combo}×  QUICK JUSTICE`,WIDTH-32,HEIGHT-120,17,'#f4d28a','right');
   // Fine dust drifts at a fixed cost, away from the combat silhouette.
   if(save.settings.motion){ctx.fillStyle='#f4dbad55';for(let i=0;i<14;i++){const x=(i*107+t*12)%WIDTH,y=170+(i*59)%270+Math.sin(t+i)*5;ctx.fillRect(x,y,2,2);}}
@@ -313,13 +313,22 @@ async function loadAssets(){
   })));
   if(failures.length){$('loading').innerHTML=`<div class="load-error"><h2>The wagon lost a wheel.</h2><p>Some game art couldn’t load. Check your connection and try again.</p><button class="primary" id="retry-load">Try again</button></div>`;$('retry-load').onclick=()=>location.reload();console.error('Missing assets:',failures);return;}
   // Trim transparent padding inside source rectangles, retaining original PNG data.
-  const sheetPixels={};
+  const sheetPixels={},viewCache=new Map();
   for(const [name,r] of Object.entries(FRAMES)){
     const im=images[r.sheet];images[name]=im;
     if(!sheetPixels[r.sheet]){const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(im,0,0);sheetPixels[r.sheet]=cx.getImageData(0,0,c.width,c.height).data;}
     const pixels=sheetPixels[r.sheet];let x0=r.x+r.w,y0=r.y+r.h,x1=r.x,y1=r.y;
     for(let y=r.y;y<Math.min(im.height,r.y+r.h);y++)for(let x=r.x;x<Math.min(im.width,r.x+r.w);x++)if(pixels[(y*im.width+x)*4+3]>80&&!r.omit?.some(q=>x>=q.x&&x<q.x+q.w&&y>=q.y&&y<q.y+q.h)){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
-    crops[name]={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};
+    const crop=crops[name]={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};
+    // Clip at native resolution before scaling so neighboring atlas cells cannot bleed.
+    const key=JSON.stringify([r.sheet,crop,r.omit]);
+    if(!viewCache.has(key)){
+      const view=document.createElement('canvas');view.width=crop.w+4;view.height=crop.h+4;
+      const cx=view.getContext('2d');cx.drawImage(im,crop.x,crop.y,crop.w,crop.h,2,2,crop.w,crop.h);
+      for(const q of r.omit||[])cx.clearRect(q.x-crop.x+2,q.y-crop.y+2,q.w,q.h);
+      viewCache.set(key,view);
+    }
+    spriteViews[name]=viewCache.get(key);
   }
   assetsReady=true;$('loading').hidden=true;resize();home();lastTime=performance.now();requestAnimationFrame(frame);
   if(!storageOK)toast('Browser storage is unavailable. Progress will last for this session.');

@@ -6,7 +6,7 @@ import argparse, shutil
 root=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,default=root/'dist/packages');args=parser.parse_args()
 out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
-allowed=['README.md','index.html','game.js','style.css','icon.svg','package.json','package-lock.json','.gitignore','src','scripts','tests','docs','art','sound']
+allowed=['README.md','index.html','game.js','style.css','icon.svg','package.json','package-lock.json','.gitignore','src','scripts','tests','docs','art','sound','fonts']
 files=[]
 for name in allowed:
  p=root/name
@@ -14,7 +14,7 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.1
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.2
 
 Open BigMoneyRustlas.html in a modern browser to play. All images and all 46 original
 sound assets are embedded. If your browser restricts local HTML or saving, use the
@@ -32,6 +32,13 @@ CONTROLS
 A/D or arrows: move. Space: jump (hold for height). J: fire. K: pimp hand.
 Shift: dodge. R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
 From chapter seven onward, Sugar uses the pimp hand instead of the injured gun hand.
+
+ORIGINAL POSTER STYLE
+Red-and-gold title lettering, cyan skies, orange desert, weathered paper menus, and
+matching original-movie costumes throughout Sugar’s movement and elastic slap poses.
+Chips wears his gold suit. Every environment and sprite sheet has a matching print finish.
+The built-in ImageGen prompts and asset notes are in Source/docs/OG_STYLE.md.
+Rye typeface is included under the SIL Open Font License (Source/fonts/OFL.txt).
 
 NEW SOUND MIX
 Layered revolver reports; mechanical reloads; timed elastic stretch, snap, recoil and
@@ -66,4 +73,4 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.1\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.2\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
