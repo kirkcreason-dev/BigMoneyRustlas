@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><base href="../"><title>Rustlas audio render checks</title><style>body{font:16px system-ui;background:#17130f;color:#f1e5cd;margin:40px}button{padding:14px;background:#dfb86d;border:0}pre{white-space:pre-wrap;line-height:1.7}audio{display:block;margin:18px 0}</style><h1>Sound mix verification</h1><p>Renders the actual game mixer without using your speakers.</p><button id="run">Run audio checks</button><pre id="results" role="status">Ready.</pre><div id="preview"></div><script type="module">
+import {SoundEngine} from './src/audio.js';
+import {defaultSave,Game} from './src/core.js';
+const out=document.querySelector('#results');
+function measure(buffer){let peak=0,sum=0,count=0;for(let c=0;c<buffer.numberOfChannels;c++)for(const x of buffer.getChannelData(c)){peak=Math.max(peak,Math.abs(x));sum+=x*x;count++;}return {peak,rms:Math.sqrt(sum/count)};}
+function wav(buffer){const frames=buffer.length,channels=buffer.numberOfChannels,a=new ArrayBuffer(44+frames*channels*2),v=new DataView(a);let o=0;const str=s=>{for(const c of s)v.setUint8(o++,c.charCodeAt(0));};str('RIFF');v.setUint32(4,a.byteLength-8,true);o=8;str('WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);v.setUint32(24,buffer.sampleRate,true);v.setUint32(28,buffer.sampleRate*channels*2,true);v.setUint16(32,channels*2,true);v.setUint16(34,16,true);o=36;str('data');v.setUint32(40,a.byteLength-44,true);o=44;for(let i=0;i<frames;i++)for(let c=0;c<channels;c++){v.setInt16(o,Math.round(Math.max(-1,Math.min(1,buffer.getChannelData(c)[i]))*32767),true);o+=2;}return new Blob([a],{type:'audio/wav'});}
+document.querySelector('#run').onclick=async()=>{
+ document.querySelector('#run').disabled=true;out.textContent='Rendering…';
+ try{
+  for(const scenario of ['effects and score','muted','paused']){
+   const ctx=new OfflineAudioContext(2,24000*7,24000),settings=defaultSave().settings;
+   if(scenario==='muted'){settings.sound=false;settings.music=false;}
+   const engine=new SoundEngine(()=>settings,()=>new Game(1),()=>false,()=>ctx);await engine.init();
+   if(engine.failed.length)throw Error('Missing assets: '+engine.failed.join(', '));
+   await engine.preview();for(let i=0;i<20;i++)engine.score(i,.3+i*.326,false,'desert');
+   if(scenario==='paused')engine.pause(true);
+   const rendered=await ctx.startRendering(),stats=measure(rendered);
+   if(scenario==='effects and score'){
+    if(!(stats.peak>.05&&stats.peak<.98&&stats.rms>.001))throw Error('Invalid output level '+JSON.stringify(stats));
+    const player=document.createElement('audio');player.controls=true;player.src=URL.createObjectURL(wav(rendered));document.querySelector('#preview').append(player);
+   }else if(stats.peak>.00001)throw Error(scenario+' leaked audio: '+stats.peak);
+   out.textContent+='\nPASS: '+scenario+'; 46 assets decoded; peak '+stats.peak.toFixed(4)+'; RMS '+stats.rms.toFixed(4);
+  }
+  out.textContent+='\nAll browser audio checks passed.';
+ }catch(e){out.textContent+='\nFAIL: '+e.message;}finally{document.querySelector('#run').disabled=false;}
+};
+</script></html>
