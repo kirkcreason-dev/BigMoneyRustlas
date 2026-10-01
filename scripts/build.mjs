@@ -29,7 +29,7 @@ const read=name=>readFile(path.join(root,name),'utf8');
 const strip=code=>code.replace(/^import .*?;\s*$/gm,'').replace(/\bexport /g,'');
 const wrap=(code,names)=>`const {${names}}=(()=>{\n${strip(code)}\nreturn {${names}};})();\n`;
 const secrets=wrap(await read('src/secrets.js'),'SECRETS,secretById');
-const core=wrap(await read('src/core.js'),'Game,SLAP_DURATION,slapPose,slapReach,CHAPTERS,ENEMIES,BOSSES,UPGRADES,DIFFICULTIES,WIDTH,HEIGHT,FLOOR,clamp,defaultSave,sanitizeSave,settleRun,purchase');
+const core=wrap(await read('src/core.js'),'Game,BOUNTIES,bountyProgress,SLAP_DURATION,slapPose,slapReach,CHAPTERS,ENEMIES,BOSSES,UPGRADES,DIFFICULTIES,WIDTH,HEIGHT,FLOOR,clamp,defaultSave,sanitizeSave,settleRun,purchase');
 let assetSource=await read('src/assets.js');
 assetSource=assetSource.replace(/export const ASSETS=\{[\s\S]*?\n\};/,`export const ASSETS=${JSON.stringify(data)};`);
 const assets=wrap(assetSource,'ASSETS,FRAMES,backgroundUrl');

@@ -14,7 +14,7 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.4
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.5
 
 Open BigMoneyRustlas.html in a modern browser to play. All images and all 46 original
 sound assets are embedded. If your browser restricts local HTML or saving, use the
@@ -30,8 +30,17 @@ Optional: Python 3 regenerates sounds and packages ZIPs; no Python packages are 
 
 CONTROLS
 A/D or arrows: move. Space: jump (hold for height). J: fire. K: pimp hand.
-Shift: dodge. R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
+Shift: dodge. Q: High Noon (RB on controller, or tap the gold meter).
+R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
 From chapter seven onward, Sugar uses the pimp hand instead of the injured gun hand.
+
+SHOWDOWN UPDATE
+High Noon: earn charge from combat and exploration, then unleash five seconds of faster
+shots and stronger, faster slaps. 24 smashable gold stashes and 24 optional bounties add
+new rewards to each trail. Claimed bounties pay 20 gold once, after finishing the chapter.
+A closer camera, enemy knockback/tumbles, expressive movement, landing dust, tumbleweeds,
+lanterns and drifting leaves bring the frontier to life. Checkpoints preserve stash loot
+and charge; old saves remain compatible. See Source/docs/SHOWDOWN.md.
 
 QUALITY UPDATE
 More forgiving action timing, committed dodge direction, slap/dodge readiness meters,
@@ -70,13 +79,13 @@ Sound details and verification: Source/docs/SOUND_DESIGN.md
 Inherited unused film-image and soundtrack folders are excluded from this release.
 
 VALIDATION
-26 automated checks pass, including full-campaign playthrough and audio regressions.
+34 automated checks pass, including full-campaign playthrough and audio regressions.
 The browser mixer decoded all 46 sounds and passed signal, mute, and pause checks.
 Physical phone/controller and subjective speaker/headphone listening remain to be done.
 
 REPOSITORY
-https://github.com/kirkcreason-dev/BigMoneyRustlas/pull/1
-Branch: codex/full-campaign
+https://github.com/kirkcreason-dev/BigMoneyRustlas
+Branch: codex/showdown-polish
 '''
 for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',False),('BigMoneyRustlas-Full.zip','Source',True)]:
  target=out/filename;tmp=out/(filename+'.tmp')
@@ -88,4 +97,4 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.4\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.5\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])

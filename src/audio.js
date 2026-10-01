@@ -7,7 +7,7 @@ export function soundCue(type,data={}){
   if(type==='footstep')return `step_${data.surface==='wood'?'wood':'dirt'}${data.variant%3||0}`;
   if(type==='enemy-shot')return data.kind==='pie'?'pie_throw':'enemy_shot';
   if(type==='boss-tell')return data.attack==='high'?'warning_high':data.attack==='charge'?'warning_charge':'warning_low';
-  return {shoot:'revolver',slap:'stretch','slap-extend':'hand_snap','slap-recoil':'recoil',parry:'ricochet',reload:'reload_open',loaded:'reload_close',jump:'jump',land:'land',roll:'roll',hurt:'hurt',death:'death',coin:'coin',relic:'relic',secret:'secret',checkpoint:'checkpoint',heal:'heal',shield:'shield',slam:'slam',rage:'rage','boss-start':'warning_charge','boss-defeated':'victory',complete:'victory',buy:'coin',click:'click'}[type]||null;
+  return {'noon-ready':'relic','high-noon':'shield',stash:'bullet_hit',shoot:'revolver',slap:'stretch','slap-extend':'hand_snap','slap-recoil':'recoil',parry:'ricochet',reload:'reload_open',loaded:'reload_close',jump:'jump',land:'land',roll:'roll',hurt:'hurt',death:'death',coin:'coin',relic:'relic',secret:'secret',checkpoint:'checkpoint',heal:'heal',shield:'shield',slam:'slam',rage:'rage','boss-start':'warning_charge','boss-defeated':'victory',complete:'victory',buy:'coin',click:'click'}[type]||null;
 }
 
 export class SoundEngine {
@@ -76,6 +76,8 @@ export class SoundEngine {
     const gains={shoot:.83,slap:.48,'slap-extend':.78,'slap-recoil':.55,impact:.80,footstep:.27,land:.46,jump:.4,roll:.43,coin:.50,'enemy-shot':.59,'boss-tell':.83,hurt:.77,death:.65,click:.48};
     const rate=['shoot','enemy-shot','footstep','impact','coin','land'].includes(type)?1+(Math.random()-.5)*.09:1;
     this.play(cue,{gain:(gains[type]??.65)*distant,rate,pan});
+    if(type==='stash')this.play('coin',{at:t+.09,gain:.65,pan});
+    if(type==='high-noon'){this.play('hand_snap',{at:t+.06,gain:.7});this.duckMusic(.4,.6);}
     if(type==='reload')this.play('reload_turn',{at:t+.14,gain:.4,rate:g?.items.reload?1.3:1});
     if(['shoot','slap-extend','hurt','boss-tell','slam','rage','secret'].includes(type))this.duckMusic(type==='boss-tell'?.42:.65,type==='rage'?.8:.20);
   }

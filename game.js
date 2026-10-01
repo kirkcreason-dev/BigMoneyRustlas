@@ -1,11 +1,12 @@
 import { SoundEngine } from './src/audio.js';
-import { Game, SLAP_DURATION, slapPose, slapReach, CHAPTERS, ENEMIES, BOSSES, UPGRADES, DIFFICULTIES, WIDTH, HEIGHT, FLOOR, clamp, defaultSave, sanitizeSave, settleRun, purchase } from './src/core.js';
+import { Game, BOUNTIES, bountyProgress, SLAP_DURATION, slapPose, slapReach, CHAPTERS, ENEMIES, BOSSES, UPGRADES, DIFFICULTIES, WIDTH, HEIGHT, FLOOR, clamp, defaultSave, sanitizeSave, settleRun, purchase } from './src/core.js';
 
 import { SECRETS } from './src/secrets.js';
 import { ASSETS, FRAMES, backgroundUrl } from './src/assets.js';
 import { canvasSize, prepareArtwork, prepareScenery } from './src/presentation.js';
 
 const $=id=>document.getElementById(id), canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
+const WORLD_ZOOM=1.12;
 const SAVE_KEY='rustlas_save_v2';
 let save=defaultSave(),storageOK=true,game=null,mode='loading',menuReturn='home',lastTime=0,accumulator=0,toastTimer,introTimers=[],assetsReady=false;
 const images={},crops={},spriteViews={},keys=new Set(),touchHeld=new Set(),edges={},previousPad={},holdPointers=new Map();
@@ -21,8 +22,8 @@ function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catc
 function saveRun(){if(game&&!game.complete){save.run=game.snapshot();persist();}}
 function toast(message,duration=3200){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),duration);}
 function fmtTime(n){return `${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;}
-function hintText(text){return touchDevice||save.settings.touch?text.replace('A / D to move · SPACE to jump','Arrows to move · JUMP to leap').replace('Hold J to fire · R to reload · K to slap','Hold FIRE · ↻ to reload · SLAP to strike').replace('SHIFT to dodge','DODGE to roll').replace('K returns','SLAP returns').replace('K / slap','SLAP').replace('K ·','SLAP ·').replace('E ·','LOOK ·'):text;}
-function clearInput(){keys.clear();touchHeld.clear();for(const key of Object.keys(edges))delete edges[key];holdPointers.clear();document.querySelectorAll('#touch .pressed').forEach(b=>b.classList.remove('pressed'));const pad=[...(navigator.getGamepads?.()||[])].find(p=>p?.connected);for(const i of [0,1,4,6,9])previousPad[i]=!!pad?.buttons[i]?.pressed;menuPadDown=[0,1,9].some(i=>pad?.buttons[i]?.pressed);}
+function hintText(text){return touchDevice||save.settings.touch?text.replace('A / D to move · SPACE to jump','Arrows to move · JUMP to leap').replace('Hold J to fire · R to reload · K to slap','Hold FIRE · ↻ to reload · SLAP to strike').replace('SHIFT to dodge','DODGE to roll').replace('K returns','SLAP returns').replace('J / K','FIRE / SLAP').replace('press Q','tap HIGH NOON').replace('K / slap','SLAP').replace('K ·','SLAP ·').replace('E ·','LOOK ·'):text;}
+function clearInput(){keys.clear();touchHeld.clear();for(const key of Object.keys(edges))delete edges[key];holdPointers.clear();document.querySelectorAll('#touch .pressed,#noon-button.pressed').forEach(b=>b.classList.remove('pressed'));const pad=[...(navigator.getGamepads?.()||[])].find(p=>p?.connected);for(const i of [0,1,4,5,6,9])previousPad[i]=!!pad?.buttons[i]?.pressed;menuPadDown=[0,1,9].some(i=>pad?.buttons[i]?.pressed);}
 
 const audio=new SoundEngine(()=>save.settings,()=>game,()=>mode==='playing');
 
@@ -48,25 +49,25 @@ function intro(){
 }
 function home(){
   const continuation=save.run?`CONTINUE CHAPTER ${save.run.chapter}`:save.unlocked>1&&!save.beaten?`RIDE ON · CHAPTER ${save.unlocked}`:save.beaten?'RIDE AGAIN':'START YOUR STORY';
-  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><h1><img class="title-wordmark" src="${ASSETS.logo}" alt="Big Money Rustlas"></h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Field guide','guide')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><button class="studio-brand" data-action="intro" aria-label="Replay CREASO NORSE intro"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></button><span>KEYBOARD · CONTROLLER · TOUCH</span><button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.4</button></footer></div></div>`,'home');
+  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><h1><img class="title-wordmark" src="${ASSETS.logo}" alt="Big Money Rustlas"></h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Bounty board','bounties')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Eight chapters. Four showdowns. Twenty-four dirty little secrets.'}</p><footer class="home-foot"><button class="studio-brand" data-action="intro" aria-label="Replay CREASO NORSE intro"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></button><span>KEYBOARD · CONTROLLER · TOUCH</span>${btn('Field guide','guide','text-button')}<button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V2.5</button></footer></div></div>`,'home');
 }
 function chapters(){
   const completed=Object.keys(save.best).length,badges=Object.values(save.best).reduce((n,b)=>n+b.relics,0);
-  show(`<div class="panel-screen">${header('THE ROAD TO MUD BUG','Every town has a story.','Choose a chapter. Find every lost badge. Earn your legend.',balance())}<div class="map-grid">${CHAPTERS.map((c,i)=>{const n=i+1,locked=n>save.unlocked,b=save.best[n];return `<button class="chapter-card ${locked?'locked':''} ${n===save.unlocked?'current':''}" data-action="chapter:${n}" ${locked?'disabled':''} aria-label="Chapter ${n}: ${c.name}${locked?', locked':''}"><div class="chapter-art" style="background-image:url('${backgroundUrl(c.bg)}')"><span class="chapter-number">${String(n).padStart(2,'0')}</span><span class="chapter-type">${locked?'LOCKED':c.boss?'SHOWDOWN':'CHAPTER'}</span></div><div class="chapter-info"><h3>${c.name}</h3><div class="chapter-meta"><span>${locked?'FINISH PREVIOUS CHAPTER':b?`${'★'.repeat(b.relics)}${'☆'.repeat(3-b.relics)}`:c.place}</span><span>${b?fmtTime(b.time):locked?'': '→'}</span></div></div></button>`;}).join('')}</div><div class="panel-footer"><span>${completed}/8 CHAPTERS CLEARED · ${badges}/24 LOST BADGES</span><div class="button-row">${btn('General store','shop','text-button')}${btn('← Main menu','home','secondary')}</div></div></div>`,'chapters');
+  show(`<div class="panel-screen">${header('THE ROAD TO MUD BUG','Every town has a story.','Choose a chapter. Find every lost badge. Earn your legend.',balance())}<div class="map-grid">${CHAPTERS.map((c,i)=>{const n=i+1,locked=n>save.unlocked,b=save.best[n];return `<button class="chapter-card ${locked?'locked':''} ${n===save.unlocked?'current':''}" data-action="chapter:${n}" ${locked?'disabled':''} aria-label="Chapter ${n}: ${c.name}${locked?', locked':''}"><div class="chapter-art" style="background-image:url('${backgroundUrl(c.bg)}')"><span class="chapter-number">${String(n).padStart(2,'0')}</span><span class="chapter-type">${locked?'LOCKED':c.boss?'SHOWDOWN':'CHAPTER'}</span></div><div class="chapter-info"><h3>${c.name}</h3><div class="chapter-meta"><span>${locked?'FINISH PREVIOUS CHAPTER':b?`${'★'.repeat(b.relics)}${'☆'.repeat(3-b.relics)}`:c.place}</span><span>${b?fmtTime(b.time):locked?'': '→'}</span></div><div class="chapter-bounties">${locked?'':`${BOUNTIES.filter(b=>b.chapter===n&&save.bounties.includes(b.id)).length}/3 BOUNTIES CLAIMED`}</div></div></button>`;}).join('')}</div><div class="panel-footer"><span>${completed}/8 CHAPTERS CLEARED · ${badges}/24 LOST BADGES</span><div class="button-row">${btn('General store','shop','text-button')}${btn('← Main menu','home','secondary')}</div></div></div>`,'chapters');
 }
 function story(chapter){
   if(chapter>save.unlocked)return;const c=CHAPTERS[chapter-1];
   const portrait=c.boss?`${BOSSES[c.boss].prefix}1`:c.training?'rl_sanchez_arms_crossed':'rl_sugarwolf_gun_idle';
-  show(`<div class="story-screen"><div class="story-art" style="background-image:url('${backgroundUrl(c.bg)}')"><span class="chapter-stamp">CHAPTER ${String(chapter).padStart(2,'0')}</span><canvas class="story-portrait" data-portrait="${portrait}" width="480" height="600" aria-label="${c.boss?BOSSES[c.boss].name:c.training?'Sanchez':'Sugar Wolf'}"></canvas></div><div class="story-copy"><span class="eyebrow">${c.place} / ${c.boss?'WANTED DEAD OR DEFEATED':'THE STORY SO FAR'}</span><h2>${c.name}</h2><div class="story-quote">“${c.quote}”</div><p>${c.story}</p><div class="mission"><b>YOUR MISSION</b>${c.objective}</div><div class="button-row">${btn('Saddle up →',`start:${chapter}`,'primary')}${btn('← Chapters','chapters','text-button')}</div><p class="tiny" style="margin-bottom:0">${DIFFICULTIES[save.settings.difficulty].name.toUpperCase()} · 3 LOST BADGES · CHECKPOINTS SAVE AUTOMATICALLY</p></div></div>`,'story');
+  show(`<div class="story-screen"><div class="story-art" style="background-image:url('${backgroundUrl(c.bg)}')"><span class="chapter-stamp">CHAPTER ${String(chapter).padStart(2,'0')}</span><canvas class="story-portrait" data-portrait="${portrait}" width="480" height="600" aria-label="${c.boss?BOSSES[c.boss].name:c.training?'Sanchez':'Sugar Wolf'}"></canvas></div><div class="story-copy"><span class="eyebrow">${c.place} / ${c.boss?'WANTED DEAD OR DEFEATED':'THE STORY SO FAR'}</span><h2>${c.name}</h2><div class="story-quote">“${c.quote}”</div><p>${c.story}</p><div class="mission"><b>YOUR MISSION</b>${c.objective}</div>${bountyStrip(chapter)}<div class="button-row">${btn('Saddle up →',`start:${chapter}`,'primary')}${btn('← Chapters','chapters','text-button')}</div><p class="tiny" style="margin-bottom:0">${DIFFICULTIES[save.settings.difficulty].name.toUpperCase()} · 3 LOST BADGES · CHECKPOINTS SAVE AUTOMATICALLY</p></div></div>`,'story');
 }
 function start(chapter,resume=false){
-  audio.init();game=new Game(chapter,save.settings,save.items,resume?save.run:null);save.run=game.snapshot();persist();hudCache={};for(const secret of game.secrets)secret.found=save.secrets.includes(secret.id);
+  audio.init();game=new Game(chapter,save.settings,save.items,resume?save.run:null);game.viewWidth=WIDTH/WORLD_ZOOM;save.run=game.snapshot();persist();hudCache={};for(const secret of game.secrets)secret.found=save.secrets.includes(secret.id);
   show('','playing');$('hint').textContent='';updateHud();toast(resume?'Back in the saddle.':`Chapter ${chapter} · ${CHAPTERS[chapter-1].name}`);lastTime=performance.now();
 }
 function resume(){show('','playing');lastTime=performance.now();}
 function pause(){
   if(!game||game.complete)return;saveRun();
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">TAKE A BREATHER, SHERIFF</span><div class="pause-layout"><div><h2>Hold your fire.</h2><div class="pause-menu">${btn('Back in the saddle','resume','primary')}${btn('Restart chapter','restart')}${btn('Trail secrets','journal')}${btn('Field guide','guide')}${btn('Settings','settings')}${btn('Save & quit','quit')}</div></div><div class="pause-info"><span class="eyebrow">CHAPTER ${game.chapter}</span><h3>${game.world.def.name}</h3><p>GOLD ON THE TRAIL</p><strong>◈ ${game.coins}</strong><p>LOST BADGES</p><strong>${game.relics} / 3</strong><p>TRAIL SCORE</p><strong>${game.score.toLocaleString()}</strong><p>Your last checkpoint and collected items are saved. Gold is banked when the chapter is complete.</p></div></div></div></div>`,'paused');
+  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">TAKE A BREATHER, SHERIFF</span><div class="pause-layout"><div><h2>Hold your fire.</h2><div class="pause-menu">${btn('Back in the saddle','resume','primary')}${btn('Restart chapter','restart')}${btn('Bounty board','bounties')}${btn('Trail secrets','journal')}${btn('Field guide','guide')}${btn('Settings','settings')}${btn('Save & quit','quit')}</div></div><div class="pause-info"><span class="eyebrow">CHAPTER ${game.chapter}</span><h3>${game.world.def.name}</h3><p>GOLD ON THE TRAIL</p><strong>◈ ${game.coins}</strong><p>LOST BADGES</p><strong>${game.relics} / 3</strong><p>TRAIL SCORE</p><strong>${game.score.toLocaleString()}</strong>${bountyStrip(game.chapter,game)}<p>Your last checkpoint and collected items are saved. Gold is banked when the chapter is complete.</p></div></div></div></div>`,'paused');
 }
 function shop(){
   show(`<div class="panel-screen">${header('MUD BUG GENERAL STORE','A little edge goes a long way.','Spend the gold you earn. Every upgrade stays with you.',balance())}<div class="shop-grid">${UPGRADES.map(it=>{const owned=save.items[it.id],afford=save.coins>=it.cost;return `<article class="shop-item ${owned?'owned':''}"><div class="symbol" aria-hidden="true">${it.symbol}</div><h3>${it.name}</h3><p>${it.desc}</p>${btn(owned?'✓ EQUIPPED':afford?`BUY · ◈ ${it.cost}`:`◈ ${it.cost} · NEED ${it.cost-save.coins} MORE`,`buy:${it.id}`,'primary',owned||!afford?'disabled':'')}</article>`;}).join('')}</div><footer class="panel-footer"><span>UPGRADES APPLY WHEN YOU ENTER A CHAPTER.<br>NO ADS. NO REAL-MONEY PURCHASES.</span>${btn('← Back',`back:${menuReturn}`,'secondary')}</footer></div>`,'shop');
@@ -80,21 +81,30 @@ function settings(){
   $('difficulty').addEventListener('change',e=>{save.settings.difficulty=e.target.value;persist();$('difficulty-desc').innerHTML=`${DIFFICULTIES[e.target.value].description}<br>Applies to newly started chapters.`;});
 }
 function guide(){
-  show(`<div class="panel-screen">${header('THE SHERIFF’S FIELD GUIDE','Stay quick. Shoot straight.','Everything you need to take Mud Bug back.')}<div class="guide-grid"><div><h3>The controls</h3><div class="key-table"><span>Move</span><span><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd></span><span>Jump · hold for height</span><span><kbd>SPACE</kbd> / <kbd>W</kbd> / <kbd>↑</kbd></span><span>Fire · hold to keep shooting</span><span><kbd>J</kbd> / <kbd>X</kbd></span><span>Slap · return incoming bullets</span><span><kbd>K</kbd> / <kbd>C</kbd></span><span>Reload your six-shooter</span><kbd>R</kbd><span>Dodge · brief invulnerability</span><kbd>SHIFT</kbd><span>Drop through a platform</span><span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Inspect something suspicious</span><kbd>E</kbd><span>Pause</span><span><kbd>ESC</kbd> / <kbd>P</kbd></span></div><div class="guide-note">Controller: left stick / D-pad to move, A to jump, X or RT to fire, Y to slap, B to dodge, LB to reload, LT to inspect, Start to pause. Touch controls appear on phones and tablets.</div></div><div><h3>A few things to remember</h3><p><b>Six bullets. Unlimited nerve.</b> Your revolver reloads automatically when empty. Reload before a showdown. You have unlimited reserve ammunition.</p><p><b>A slap beats a bullet.</b> Slap incoming shots to return them for triple damage. Your arm stretches across the street: wind up, let the palm connect, then recover. Dodge cancels the swing. Slap and dodge meters show when you can act again; a tap just before they refill is remembered. From chapter seven onward, your injured gun hand makes the pimp hand your only weapon.</p><p><b>Watch the warning.</b> Enemies flash a gold tell before attacking. Bosses have a recovery window. Dodge through a charge or jump a low volley.</p><p><b>Wells are your lifeline.</b> They restore health and ammunition, and save your checkpoint. Health packs stay on the trail until you need them. Falling costs a heart. Losing all hearts sends you back with your collected loot intact.</p><p><b>Look up.</b> Each chapter hides three lost sheriff badges. Recover them for bonus gold. Clear without dying to earn a clean-run mark, then replay for a faster time and higher score.</p><p><b>The frontier is deeply weird.</b> Inspect odd props with E, slap suspicious objects, or hold down to pay your respects. Each of 24 secrets earns 15 gold once and an entry in your trail journal. Find them all to become Tumbleweed Marshal.</p><p><b>Gold buys a permanent advantage.</b> It is banked when you finish a chapter. Visit the general store between chapters to improve your gear.</p></div></div><div class="panel-footer"><span>PROGRESS SAVES ON THIS BROWSER AND DEVICE.</span>${btn('Let’s ride',`back:${menuReturn}`,'primary')}</div></div>`,'guide');
+  show(`<div class="panel-screen">${header('THE SHERIFF’S FIELD GUIDE','Stay quick. Shoot straight.','Everything you need to take Mud Bug back.')}<div class="guide-grid"><div><h3>The controls</h3><div class="key-table"><span>Move</span><span><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd></span><span>Jump · hold for height</span><span><kbd>SPACE</kbd> / <kbd>W</kbd> / <kbd>↑</kbd></span><span>Fire · hold to keep shooting</span><span><kbd>J</kbd> / <kbd>X</kbd></span><span>Slap · return incoming bullets</span><span><kbd>K</kbd> / <kbd>C</kbd></span><span>High Noon · unleash a full meter</span><kbd>Q</kbd><span>Reload your six-shooter</span><kbd>R</kbd><span>Dodge · brief invulnerability</span><kbd>SHIFT</kbd><span>Drop through a platform</span><span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Inspect something suspicious</span><kbd>E</kbd><span>Pause</span><span><kbd>ESC</kbd> / <kbd>P</kbd></span></div><div class="guide-note">Controller: left stick / D-pad to move, A to jump, X or RT to fire, Y to slap, B to dodge, LB to reload, LT to inspect, RB for High Noon, Start to pause. Touch controls appear on phones and tablets.</div></div><div><h3>A few things to remember</h3><p><b>Six bullets. Unlimited nerve.</b> Your revolver reloads automatically when empty. Reload before a showdown. You have unlimited reserve ammunition.</p><p><b>A slap beats a bullet.</b> Slap incoming shots to return them for triple damage. Your arm stretches across the street: wind up, let the palm connect, then recover. Dodge cancels the swing. Slap and dodge meters show when you can act again; a tap just before they refill is remembered. From chapter seven onward, your injured gun hand makes the pimp hand your only weapon.</p><p><b>Make it High Noon.</b> Combat, returned shots, badges, and gold stashes charge your meter. Press Q, controller RB, or the High Noon button when full for five seconds of faster firing and stronger, faster slaps. It refills your revolver, but you still need to dodge.</p><p><b>Break into Chips’ fortune.</b> Three star-stamped gold stashes sit along each trail. Shoot or slap them for gold and High Noon charge. The bounty board offers 24 optional challenges, each worth 20 extra gold once you finish the chapter.</p><p><b>Watch the warning.</b> Enemies flash a gold tell before attacking. Bosses have a recovery window. Dodge through a charge or jump a low volley.</p><p><b>Wells are your lifeline.</b> They restore health and ammunition, and save your checkpoint. Health packs stay on the trail until you need them. Falling costs a heart. Losing all hearts sends you back with your collected loot intact.</p><p><b>Look up.</b> Each chapter hides three lost sheriff badges. Recover them for bonus gold. Clear without dying to earn a clean-run mark, then replay for a faster time and higher score.</p><p><b>The frontier is deeply weird.</b> Inspect odd props with E, slap suspicious objects, or hold down to pay your respects. Each of 24 secrets earns 15 gold once and an entry in your trail journal. Find them all to become Tumbleweed Marshal.</p><p><b>Gold buys a permanent advantage.</b> It is banked when you finish a chapter. Visit the general store between chapters to improve your gear.</p></div></div><div class="panel-footer"><span>PROGRESS SAVES ON THIS BROWSER AND DEVICE.</span>${btn('Let’s ride',`back:${menuReturn}`,'primary')}</div></div>`,'guide');
 }
 function results(result){
   const final=game.chapter===8,c=game.world.def;
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">CHAPTER ${game.chapter} COMPLETE / ${result.first?'FIRST CLEAR':'BACK FOR MORE'}</span><h2>${final?'The town is yours.':'That’s a day’s work.'}</h2><p>${c.name} is behind you. ${final?'Chips has played his last hand.':'There’s more trouble down the road.'}</p><div class="stats"><div class="stat"><strong>${fmtTime(result.time)}</strong><span>TRAIL TIME</span></div><div class="stat"><strong>${result.score.toLocaleString()}</strong><span>SCORE</span></div><div class="stat"><strong>+${result.reward}</strong><span>GOLD BANKED</span></div><div class="stat"><strong>${result.relics}/3</strong><span>LOST BADGES</span></div></div><div class="awards"><span class="award">★ CHAPTER CLEARED</span><span class="award ${result.relics===3?'':'missing'}">${result.relics===3?'★':'☆'} BADGE COLLECTOR</span><span class="award ${result.deaths===0?'':'missing'}">${result.deaths===0?'★':'☆'} NO DEATHS</span></div><div class="run-summary"><span><b>${result.bestCombo||0}×</b> BEST STREAK</span><span><b>${result.parries||0}</b> SHOTS RETURNED</span></div><div class="button-row">${btn(final?'The final word →':'Next chapter →',final?'ending':`chapter:${game.chapter+1}`,'primary')}${btn('General store','shop')}${btn('Chapters','chapters','text-button')}</div></div></div>`,'results');
+  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">CHAPTER ${game.chapter} COMPLETE / ${result.first?'FIRST CLEAR':'BACK FOR MORE'}</span><h2>${final?'The town is yours.':'That’s a day’s work.'}</h2><p>${c.name} is behind you. ${final?'Chips has played his last hand.':'There’s more trouble down the road.'}</p><div class="stats"><div class="stat"><strong>${fmtTime(result.time)}</strong><span>TRAIL TIME</span></div><div class="stat"><strong>${result.score.toLocaleString()}</strong><span>SCORE</span></div><div class="stat"><strong>+${result.reward}</strong><span>GOLD BANKED</span></div><div class="stat"><strong>${result.relics}/3</strong><span>LOST BADGES</span></div></div><div class="awards"><span class="award">★ CHAPTER CLEARED</span><span class="award ${result.relics===3?'':'missing'}">${result.relics===3?'★':'☆'} BADGE COLLECTOR</span><span class="award ${result.deaths===0?'':'missing'}">${result.deaths===0?'★':'☆'} NO DEATHS</span></div><div class="bounty-results"><span class="eyebrow">${result.bounties.length?`NEW BOUNTIES · +${result.bountyGold} GOLD INCLUDED`:'BOUNTIES ON THIS TRAIL'}</span>${bountyStrip(game.chapter,game)}</div><div class="run-summary"><span><b>${result.bestCombo||0}×</b> BEST STREAK</span><span><b>${result.parries||0}</b> SHOTS RETURNED</span></div><div class="button-row">${btn(final?'The final word →':'Next chapter →',final?'ending':`chapter:${game.chapter+1}`,'primary')}${btn('General store','shop')}${btn('Ride this trail again',`chapter:${game.chapter}`)}${btn('Chapters','chapters','text-button')}</div></div></div>`,'results');
 }
 function ending(){
   show(`<div class="center-screen ending"><div class="dialog"><span class="eyebrow">MUD BUG IS FREE</span><h2>Some legends<br>run in the family.</h2><p>Chips falls. Beneath the gold and the paint is Grizzly Wolf—Sugar’s own father. The truth lands harder than any bullet. But the badge still means something.</p><p>With the town free and the road quiet, Sugar Wolf rides into the sunset. Mud Bug will remember its sheriff.</p><div class="story-quote">“A town worth saving. A story worth telling.”</div><div class="credits">BIG MONEY RUSTLAS<br>THE FIRST OFFICIAL VIDEO GAME<br><br>You completed all eight chapters. Return to the trail to find all 24 lost badges and set new records.</div><div class="button-row">${btn('Back to the trail','chapters','primary')}${btn('Credits','credits')}</div></div></div>`,'ending');
 }
 function credits(){
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits-studio"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></div><div class="credits">A CREASO·NORSE GAME<br><br>FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>Original poster styling, illustrated worlds, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>Rye typeface © Sorkin Type Co · SIL Open Font License.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.4<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${btn('Replay intro','intro')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
+  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits-studio"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></div><div class="credits">A CREASO·NORSE GAME<br><br>FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>Original poster styling, illustrated worlds, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>Rye typeface © Sorkin Type Co · SIL Open Font License.<br>24 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Eight-chapter campaign · Version 2.5<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${btn('Replay intro','intro')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
 }
 function journal(){
   const all=save.secrets.length===SECRETS.length;
   show(`<div class="panel-screen">${header('THE THINGS THIS TOWN DOESN’T ADVERTISE',all?'Tumbleweed Marshal.':'The trail gets weird.',`${save.secrets.length} / 24 secrets discovered. Each new discovery earns 15 gold.`,balance())}${all?'<div class="guide-note">The Tumbleweed Council has granted you its highest honor. A gold star follows your sheriff on every future ride.</div>':''}<div class="journal-grid">${SECRETS.map((s,i)=>{const found=save.secrets.includes(s.id);return `<article class="journal-entry ${found?'found':''}"><span class="eyebrow">${String(i+1).padStart(2,'0')} / CHAPTER ${s.chapter} ${found?'· DISCOVERED':''}</span><h3>${found?s.name:'Unknown business'}</h3><p>${found?s.text:s.clue}</p><small>${found?'✓ 15 GOLD CLAIMED':s.action==='slap'?'TRY A SLAP':s.action==='down'?'HOLD DOWN TO BOW':'E / INSPECT'}</small></article>`;}).join('')}</div><div class="panel-footer"><span>ORIGINAL NONSENSE, FOUND IN THE WILD.</span>${btn('Back',`back:${menuReturn}`,'primary')}</div></div>`,'journal');
+}
+function bountyStrip(chapter,run=null){
+  return `<div class="bounty-strip">${BOUNTIES.filter(b=>b.chapter===chapter).map(b=>{
+    const claimed=save.bounties.includes(b.id),p=run?bountyProgress(b,run):null;
+    return `<div class="bounty-line ${claimed?'claimed':p?.met?'on-track':''}"><span aria-hidden="true">${claimed?'★':'☆'}</span><span><b>${b.name}</b><small>${b.description}</small></span><em>${claimed?'CLAIMED':p?p.label:'+20 ◈'}</em></div>`;
+  }).join('')}</div>`;
+}
+function bounties(){
+  show(`<div class="panel-screen">${header('MUD BUG BOUNTY OFFICE','Make a name for yourself.',`${save.bounties.length} / 24 bounties claimed. Earn 20 gold per stamp by finishing the chapter.`,balance())}<div class="bounty-board">${CHAPTERS.map((c,i)=>`<article class="bounty-poster ${i+1>save.unlocked?'locked':''}"><span class="eyebrow">CHAPTER ${String(i+1).padStart(2,'0')} · ${i+1>save.unlocked?'TRAIL LOCKED':'WANTED'}</span><h3>${c.name}</h3>${bountyStrip(i+1,menuReturn==='paused'&&game?.chapter===i+1?game:null)}${menuReturn==='paused'?'':btn(i+1>save.unlocked?'Finish the previous trail':'Ride this trail →',`chapter:${i+1}`,'text-button',i+1>save.unlocked?'disabled':'')}</article>`).join('')}</div><div class="panel-footer"><span>GOLD STASHES · LOST BADGES · FEATS OF FRONTIER NONSENSE</span>${btn('Back',`back:${menuReturn}`,'primary')}</div></div>`,'bounties');
 }
 function back(where){if(where==='paused'&&game)pause();else if(where==='chapters')chapters();else if(where==='results'&&game?.result)results(game.result);else home();}
 function action(value){
@@ -103,7 +113,7 @@ function action(value){
   else if(name==='continue'){if(save.run)start(save.run.chapter,true);else story(save.beaten?1:save.unlocked);}
   else if(name==='home')home();else if(name==='chapters')chapters();else if(name==='chapter')story(Number(arg));else if(name==='start')start(Number(arg));
   else if(name==='resume')resume();else if(name==='restart')show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">A FRESH RUN</span><h2>Ride this trail again?</h2><p>This restarts the current chapter. Your banked gold, upgrades, and discovered secrets stay with you.</p><div class="button-row">${btn('Keep riding','resume','primary')}${btn('Restart chapter','restart-confirm')}</div></div></div>`,'restart');else if(name==='restart-confirm')start(game.chapter);else if(name==='quit'){saveRun();home();}
-  else if(['shop','settings','guide','journal'].includes(name)){if(!['shop','settings','guide','journal'].includes(mode))menuReturn=mode;({shop,settings,guide,journal})[name]();}
+  else if(['shop','settings','guide','journal','bounties'].includes(name)){if(!['shop','settings','guide','journal','bounties'].includes(mode))menuReturn=mode;({shop,settings,guide,journal,bounties})[name]();}
   else if(name==='back')back(arg);
   else if(name==='buy'){if(purchase(save,arg)){persist();audio.sfx('buy');shop();toast(`${UPGRADES.find(i=>i.id===arg).name} equipped.`);}}
   else if(name==='toggle'){
@@ -114,12 +124,13 @@ function action(value){
 }
 $('menu').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b&&!b.disabled)action(b.dataset.action);});
 $('pause').addEventListener('click',pause);
+$('noon-button').addEventListener('click',e=>{if(e.detail===0&&mode==='playing')edges.special=true;});
 function applyPreferences(){document.body.classList.toggle('reduced-motion',!effectsEnabled());}
 motionPreference.addEventListener('change',applyPreferences);
 applyPreferences();
 
-const keyActions={Space:'jump',KeyW:'jump',ArrowUp:'jump',KeyR:'reload',ShiftLeft:'roll',ShiftRight:'roll',KeyE:'interact',KeyJ:'fire',KeyX:'fire',KeyK:'slap',KeyC:'slap'};
-const gameKeys=new Set(['Space','KeyW','ArrowUp','KeyR','ShiftLeft','ShiftRight','ArrowLeft','ArrowRight','ArrowDown','KeyA','KeyD','KeyS','KeyJ','KeyK','KeyX','KeyC','KeyE','Escape','KeyP']);
+const keyActions={KeyQ:'special',Space:'jump',KeyW:'jump',ArrowUp:'jump',KeyR:'reload',ShiftLeft:'roll',ShiftRight:'roll',KeyE:'interact',KeyJ:'fire',KeyX:'fire',KeyK:'slap',KeyC:'slap'};
+const gameKeys=new Set(['KeyQ','Space','KeyW','ArrowUp','KeyR','ShiftLeft','ShiftRight','ArrowLeft','ArrowRight','ArrowDown','KeyA','KeyD','KeyS','KeyJ','KeyK','KeyX','KeyC','KeyE','Escape','KeyP']);
 addEventListener('keydown',e=>{
   if(!assetsReady)return;
   if(mode==='intro'&&['Enter','Space','Escape'].includes(e.code)){e.preventDefault();if(!e.repeat)home();return;}
@@ -127,7 +138,7 @@ addEventListener('keydown',e=>{
     const list=[...$('menu').querySelectorAll('button:not(:disabled),select,input[type=range]')];if(list.length){const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}return;
   }
   if(e.code==='Escape'||(e.code==='KeyP'&&mode==='playing')){
-    if(e.repeat)return;e.preventDefault();if(mode==='playing')pause();else if(mode==='paused')resume();else if(mode==='restart')pause();else if(['settings','guide','shop','journal'].includes(mode))back(menuReturn);else if(mode!=='home')home();return;
+    if(e.repeat)return;e.preventDefault();if(mode==='playing')pause();else if(mode==='paused')resume();else if(mode==='restart')pause();else if(['settings','guide','shop','journal','bounties'].includes(mode))back(menuReturn);else if(mode!=='home')home();return;
   }
   if(mode!=='playing')return;if(gameKeys.has(e.code))e.preventDefault();
   if(!keys.has(e.code)&&keyActions[e.code])edges[keyActions[e.code]]=true;keys.add(e.code);
@@ -139,7 +150,7 @@ addEventListener('pagehide',saveRun);
 addEventListener('gamepaddisconnected',()=>{if(padConnected&&mode==='playing'){pause();toast('Controller disconnected. Reconnect or use the keyboard.');}padConnected=false;});
 window.onAndroidPause=()=>{if(mode==='playing')pause();};
 window.onAndroidBack=()=>{if(mode==='playing')pause();else if(mode==='paused')resume();else home();};
-for(const button of document.querySelectorAll('#touch button')){
+for(const button of document.querySelectorAll('#touch button,#noon-button')){
   button.addEventListener('contextmenu',e=>e.preventDefault());
   button.addEventListener('pointerdown',e=>{e.preventDefault();audio.init();button.setPointerCapture(e.pointerId);button.classList.add('pressed');const control=button.dataset.hold||button.dataset.tap;holdPointers.set(e.pointerId,{button,control});if(button.dataset.hold)touchHeld.add(control);if(['jump','fire','slap'].includes(control)||button.dataset.tap)edges[control]=true;});
   const release=e=>{const held=holdPointers.get(e.pointerId);if(!held)return;holdPointers.delete(e.pointerId);if(![...holdPointers.values()].some(p=>p.control===held.control))touchHeld.delete(held.control);if(![...holdPointers.values()].some(p=>p.button===held.button))held.button.classList.remove('pressed');};
@@ -147,14 +158,14 @@ for(const button of document.querySelectorAll('#touch button')){
 }
 function readInput(){
   let move=(keys.has('KeyD')||keys.has('ArrowRight')||touchHeld.has('right')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')||touchHeld.has('left')?1:0);
-  const input={move,jump:!!edges.jump,jumpHeld:keys.has('Space')||keys.has('KeyW')||keys.has('ArrowUp')||touchHeld.has('jump'),fire:!!edges.fire||keys.has('KeyJ')||keys.has('KeyX')||touchHeld.has('fire'),slap:!!edges.slap||keys.has('KeyK')||keys.has('KeyC')||touchHeld.has('slap'),down:keys.has('KeyS')||keys.has('ArrowDown')||touchHeld.has('down'),reload:!!edges.reload,roll:!!edges.roll,interact:!!edges.interact};
+  const input={move,special:!!edges.special,jump:!!edges.jump,jumpHeld:keys.has('Space')||keys.has('KeyW')||keys.has('ArrowUp')||touchHeld.has('jump'),fire:!!edges.fire||keys.has('KeyJ')||keys.has('KeyX')||touchHeld.has('fire'),slap:!!edges.slap||keys.has('KeyK')||keys.has('KeyC')||touchHeld.has('slap'),down:keys.has('KeyS')||keys.has('ArrowDown')||touchHeld.has('down'),reload:!!edges.reload,roll:!!edges.roll,interact:!!edges.interact};
   const pad=[...(navigator.getGamepads?.()||[])].find(p=>p?.connected);
   if(pad){
     if(!padConnected){padConnected=true;toast('Controller connected. A jump · X fire · Y slap · B dodge');}
     const pressed=i=>!!pad.buttons[i]?.pressed;
     const axis=Math.abs(pad.axes[0])>.2?pad.axes[0]:0;input.move=axis||((pressed(15)?1:0)-(pressed(14)?1:0))||input.move;
     input.jumpHeld||=pressed(0);input.fire||=pressed(2)||pressed(7);input.slap||=pressed(3);input.down||=pressed(13);
-    for(const [i,k]of [[0,'jump'],[1,'roll'],[4,'reload'],[6,'interact']]){if(pressed(i)&&!previousPad[i])input[k]=true;previousPad[i]=pressed(i);}
+    for(const [i,k]of [[0,'jump'],[1,'roll'],[4,'reload'],[5,'special'],[6,'interact']]){if(pressed(i)&&!previousPad[i])input[k]=true;previousPad[i]=pressed(i);}
     if(pressed(9)&&!previousPad[9])pause();previousPad[9]=pressed(9);
   }else{padConnected=false;for(const k of Object.keys(previousPad))delete previousPad[k];}
   for(const k of Object.keys(edges))delete edges[k];return input;
@@ -179,7 +190,11 @@ function updateHud(){
   const label=training?'THE PIMP HAND':g.reload>0?'RELOADING…':'SIX-SHOOTER';set('weapon-label',label,label);
   hudElements['reload-track'].hidden=g.reload<=0;bar('reload-fill',1-g.reload/g.reloadDuration);
   bar('trail-fill',p.x/g.world.exit);
-  for(const [ability,duration]of [['slap',.5],['roll',.85]]){const ready=p[ability+'CD']<=0;set(ability+'-status',ready,ready?'READY':'WAIT');bar(ability+'-fill',1-p[ability+'CD']/duration);}
+  for(const [ability,duration]of [['slap',g.noonTime>0?.36:.5],['roll',.85]]){const ready=p[ability+'CD']<=0;set(ability+'-status',ready,ready?'READY':'WAIT');bar(ability+'-fill',1-p[ability+'CD']/duration);}
+  const noonState=g.noonTime>0?'active':g.noon>=100?'ready':'charging';
+  const noonLabel=g.noonTime>0?`${Math.ceil(g.noonTime)}s BURST`:g.noon>=100?'UNLEASH':`${Math.floor(g.noon)}%`;
+  set('noon-status',noonLabel,noonLabel);bar('noon-fill',g.noonTime>0?g.noonTime/5:g.noon/100);
+  if(hudCache.noonState!==noonState){hudCache.noonState=noonState;const button=hudElements['noon-button'];button.dataset.state=noonState;button.disabled=noonState!=='ready';button.setAttribute('aria-label',noonState==='ready'?'Unleash High Noon (Q or RB)':noonState==='active'?'High Noon active':'High Noon charging: earn charge with combat and loot');}
   set('run-score',g.score,g.score.toLocaleString());
   set('combo-label',g.combo>1?g.combo:0,g.combo>1?`${g.combo}× QUICK JUSTICE`:'TRAIL SCORE');bar('combo-fill',g.combo>1?g.comboTimer/3:0);
   const b=g.world.boss;$('boss-hud').hidden=!b?.active||b.dead;
@@ -192,6 +207,8 @@ function processEvents(){
     if(e.type==='hint'&&!game.secretPrompt)$('hint').textContent=hintText(e.text);
     if(e.type==='secret-prompt')$('hint').textContent=hintText(e.text||game.lastSign);
     if(e.type==='secret'){if(!save.secrets.includes(e.id)){save.secrets.push(e.id);save.coins+=15;persist();}toast(`${e.name} · +15 gold. ${e.text}`,7000);}
+    if(e.type==='noon-ready')toast('HIGH NOON READY · Q / RB / tap the gold button');
+    if(e.type==='high-noon')toast('HIGH NOON · Five seconds. Make them count.',2000);
     if(e.type==='relic')toast(`Lost sheriff badge · ${game.relics} of 3 recovered`);
     if(e.type==='boss-start')toast(`${e.name.toUpperCase()} · The showdown begins`);
     if(e.type==='boss-defeated')toast(`${e.name} is down. Ride through the exit →`);
@@ -238,9 +255,11 @@ function drawWorld(g){
   if(bg){const bh=HEIGHT,bw=bg.width/bg.height*bh,off=-(g.cam*.23)%bw;for(let x=off-bw;x<WIDTH;x+=bw)ctx.drawImage(bg,x,0,bw,bh);}
   if(g.chapter===7){ctx.fillStyle='#57738626';ctx.fillRect(0,0,WIDTH,HEIGHT);}if(g.chapter===5){ctx.fillStyle='#20162050';ctx.fillRect(0,0,WIDTH,HEIGHT);}
   ctx.fillStyle=atmosphere;ctx.fillRect(0,0,WIDTH,HEIGHT);
-  const shake=motion&&g.shake>0?(Math.random()-.5)*g.shake*32:0;ctx.save();ctx.translate(-Math.round(g.cam)+shake,shake*.4);
+  const shake=motion&&g.shake>0?(Math.random()-.5)*g.shake*32:0;ctx.save();ctx.translate(shake,FLOOR*(1-WORLD_ZOOM)-g.camY*WORLD_ZOOM+shake*.4);ctx.scale(WORLD_ZOOM,WORLD_ZOOM);ctx.translate(-Math.round(g.cam),0);
   drawPlatforms(g);
+  drawLivingTrail(g,motion);
   drawSecrets(g);
+  drawStashes(g,motion);
   for(const c of w.checkpoints){
     if(c.x<g.cam-90||c.x>g.cam+WIDTH+90)continue;
     drawWell(c.x+25,FLOOR,c.hit);
@@ -255,11 +274,12 @@ function drawWorld(g){
     else if(c.type==='relic'){ctx.save();ctx.shadowColor='#ffc852';ctx.shadowBlur=18;drawStar(c.x,c.y+bob,19,'#f6ca6b');ctx.restore();drawStar(c.x,c.y+bob,10,'#8a562b');text('R',c.x,c.y+5+bob,11,'#f8d78f','center','Rye');}
     else{ctx.fillStyle='#23402c';ctx.fillRect(c.x-14,c.y-14+bob,28,28);ctx.strokeStyle='#a7c99a';ctx.strokeRect(c.x-14,c.y-14+bob,28,28);ctx.fillStyle='#c5e0b1';ctx.fillRect(c.x-3,c.y-10+bob,6,20);ctx.fillRect(c.x-10,c.y-3+bob,20,6);}
   }
-  for(const e of w.enemies){if(e.dead||e.x<g.cam-130||e.x>g.cam+WIDTH+130)continue;shadow(e.x+e.w/2,FLOOR,25);const bob=e.attack==='walk'?Math.sin(e.t*10)*2:0;
-    sprite(e.img,e.x+e.w/2,e.y+e.h+bob,e.h+24,e.dir<0,e.flash>0?.5:1);
+  for(const e of w.enemies){if(e.dead||e.x<g.cam-130||e.x>g.cam+WIDTH+130)continue;shadow(e.x+e.w/2,surfaceBelow(g,e.x+e.w/2,e.y+e.h),25);const bob=e.attack==='walk'?Math.sin(e.t*10)*2:0;
+    ctx.save();const ex=e.x+e.w/2,ey=e.y+e.h+bob;ctx.translate(ex,ey);if(motion&&e.stagger>0)ctx.rotate(Math.sign(e.knock)*e.stagger*.55);sprite(e.img,0,0,e.h+24,e.dir<0,e.flash>0?.68:1);ctx.restore();
     if(e.phase==='aim'){text('!',e.x+e.w/2,e.y-37,27,'#ffcb65');ctx.strokeStyle='#ffc96f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x+e.w/2,e.y-47,17,0,7);ctx.stroke();}
     if(e.hp<e.maxHp){ctx.fillStyle='#33251b';ctx.fillRect(e.x,e.y-20,e.w,3);ctx.fillStyle='#e0a667';ctx.fillRect(e.x,e.y-20,e.w*e.hp/e.maxHp,3);}
   }
+  for(const d of g.defeats){ctx.save();ctx.translate(d.x,d.y);if(motion)ctx.rotate((.38-d.life)*Math.sign(d.vx)*2);sprite(d.img,0,0,d.h,d.dir<0,d.life/.38);ctx.restore();}
   const b=w.boss;
   if(b&&!b.dead){
     shadow(b.x+b.w/2,FLOOR,b.w*.6);
@@ -275,12 +295,13 @@ function drawWorld(g){
     sprite(images[name]?name:`${b.prefix}1`,b.x+b.w/2,b.y+b.h,b.h+20,b.dir<0,b.flash>0?(motion&&Math.floor(t*30)%2?.55:.8):1);
   }
   for(const s of g.shots){
-    const color=s.friendly?(s.kind==='return'?'#bbf0c0':'#ffe1a3'):'#ff9d76';ctx.fillStyle=color;ctx.strokeStyle=color;
+    const color=s.friendly?(s.kind==='return'?'#bbf0c0':s.charged?'#fff3b6':'#ffe1a3'):'#ff9d76';ctx.fillStyle=color;ctx.strokeStyle=color;
     if(s.kind==='pie'){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(t*7);ctx.fillStyle=s.friendly?'#b9efbd':'#dfae6f';ctx.beginPath();ctx.ellipse(0,0,15,8,0,0,7);ctx.fill();ctx.fillStyle='#684133';ctx.fillRect(-12,-3,24,3);ctx.restore();}
     else if(s.kind==='wave'){ctx.lineWidth=4;ctx.beginPath();ctx.arc(s.x,s.y,14,Math.PI,0);ctx.stroke();}
     else {ctx.save();ctx.shadowColor=color;ctx.shadowBlur=8;ctx.beginPath();ctx.ellipse(s.x,s.y,s.friendly?10:8,s.friendly?3:5,0,0,7);ctx.fill();ctx.globalAlpha=.35;ctx.fillRect(s.x-Math.sign(s.vx)*22,s.y-1,Math.sign(s.vx)*18,2);ctx.restore();}
   }
-  const p=g.player;shadow(p.x+p.w/2,FLOOR,24);
+  const p=g.player,feet=p.y+p.h,ground=surfaceBelow(g,p.x+21,feet);shadow(p.x+21,ground,Math.max(10,24-(ground-feet)*.035));
+  if(g.noonTime>0){ctx.save();ctx.strokeStyle='#ffe4a3';ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x+21,feet-40,34,57,0,0,7);ctx.stroke();if(motion){for(let i=0;i<4;i++)drawStar(p.x+21+Math.cos(t*5+i*1.57)*38,feet-40+Math.sin(t*5+i*1.57)*49,4,'#ffe4a3');}ctx.restore();}
   const pimpMode=w.def.training||w.def.meleeOnly;
   let pose='idle',prefix=pimpMode?'rl_sugarwolf_slap_':'rl_sugarwolf_gun_';
   if(p.action>0)pose=p.actionKind==='slap'?'slap2':'shoot';else if(p.roll>0||p.ground&&p.duck)pose='crouch';else if(!p.ground)pose='jump';else if(Math.abs(p.vx)>35)pose=`walk${1+Math.floor(p.anim*10)%3}`;
@@ -295,7 +316,11 @@ function drawWorld(g){
     const f=FRAMES[name],scale=109/f.bodyHeight,xScale=scale*(g.items.slap?1.18:1),r=crops[name];
     ctx.translate(p.x+p.w/2,p.y+p.h+2);ctx.scale(p.dir*xScale,scale);ctx.globalAlpha=alpha;
     const view=spriteViews[name];ctx.drawImage(view,r.x-f.anchorX-2,r.y-f.baseY-2);
-  }else if(p.roll>0){ctx.translate(p.x+p.w/2,p.y+p.h-24);ctx.rotate(p.dir*(1-p.roll/.26)*Math.PI*2);sprite(name,0,35,playerHeight,p.dir<0,alpha);}else sprite(name,p.x+p.w/2,p.y+p.h+2,playerHeight,p.dir<0,alpha);ctx.restore();
+  }else if(p.roll>0){ctx.translate(p.x+p.w/2,p.y+p.h-24);if(motion)ctx.rotate(p.dir*(1-p.roll/.26)*Math.PI*2);sprite(name,0,35,playerHeight,p.dir<0,alpha);}else{
+    ctx.translate(p.x+21,feet+2);
+    if(motion){const squash=(p.landing||0)/.16;ctx.scale(1+squash*.09,1-squash*.09);ctx.rotate(p.vx/340*.035-p.dir*(p.recoil||0)*.32);}
+    sprite(name,0,0,playerHeight,p.dir<0,alpha);
+  }ctx.restore();
   if(p.action>0&&p.actionKind==='slap'&&slapPose(p.action)==='extend'){
     const tip=p.x+p.w/2+p.dir*slapReach(p.action,g.items.slap);
     ctx.save();ctx.globalAlpha=.65;ctx.strokeStyle='#ffe1a0';ctx.lineWidth=3;
@@ -330,7 +355,7 @@ function frame(now){
   if(mode==='playing'&&game){
     accumulator+=delta;let first=true,input;
     while(accumulator>=1/60&&mode==='playing'){
-      if(first){input=readInput();first=false;}else input={...input,jump:false,roll:false,reload:false,interact:false};
+      if(first){input=readInput();first=false;}else input={...input,jump:false,roll:false,reload:false,interact:false,special:false};
       if(mode!=='playing')break;game.step(1/60,input);processEvents();accumulator-=1/60;
     }
     if(!first){if(now-lastHudTime>=50){updateHud();lastHudTime=now;}render();}
@@ -347,7 +372,7 @@ async function loadAssets(){
   const prepared=await prepareArtwork(images,FRAMES,progress=>{const percent=Math.round(80+progress*20);$('loading-progress').style.width=`${percent}%`;$('loading-text').textContent=`Preparing the trail · ${percent}%`;});
   Object.assign(crops,prepared.crops);Object.assign(spriteViews,prepared.views);
   for(const [name,r]of Object.entries(FRAMES))images[name]=images[r.sheet];
-  scenery=prepareScenery(images,crops);
+  scenery=prepareScenery(images,crops);scenery.stashes=prepareStashArt();scenery.lanternGlow=prepareLanternGlow();
   assetsReady=true;$('loading').hidden=true;resize();intro();lastTime=performance.now();requestAnimationFrame(frame);
   if(!storageOK)toast('Browser storage is unavailable. Progress will last for this session.');
 }
@@ -404,4 +429,67 @@ function drawSecrets(g){
     }
     ctx.restore();
   }
+}
+
+function surfaceBelow(g,x,feet){
+  let y=HEIGHT+160;
+  for(const q of g.world.platforms)if(x>=q.x&&x<=q.x+q.w&&q.y>=feet-5)y=Math.min(y,q.y);
+  return y;
+}
+// Small original prop illustrations are drawn once, then reused as sprites.
+function prepareStashArt(){
+  return [false,true].map(broken=>{
+    const cv=document.createElement('canvas');cv.width=144;cv.height=138;
+    const c=cv.getContext('2d');c.scale(2,2);c.translate(36,62);
+    if(broken){
+      c.fillStyle='#3a2316';c.fillRect(-26,-8,52,9);
+      for(let i=0;i<6;i++){c.save();c.translate(-24+i*9,-6-(i%3)*2);c.rotate((i%2?1:-1)*.3);c.fillStyle=i%2?'#a5713c':'#6e4627';c.fillRect(-3,-4,15,6);c.strokeStyle='#c6934b';c.strokeRect(-3,-4,15,6);c.restore();}
+    }else{
+      const wood=c.createLinearGradient(0,-50,0,0);wood.addColorStop(0,'#b57d3d');wood.addColorStop(1,'#57351d');
+      c.fillStyle=wood;c.fillRect(-25,-47,50,47);c.fillStyle='#d6a960';c.beginPath();c.moveTo(-25,-47);c.lineTo(-18,-54);c.lineTo(31,-54);c.lineTo(25,-47);c.fill();
+      c.fillStyle='#573821';c.beginPath();c.moveTo(25,-47);c.lineTo(31,-54);c.lineTo(31,-8);c.lineTo(25,0);c.fill();
+      c.strokeStyle='#352519';c.lineWidth=1.5;for(let y=-37;y<0;y+=12){c.beginPath();c.moveTo(-25,y);c.lineTo(25,y);c.stroke();}
+      c.strokeStyle='#edba6966';c.lineWidth=.7;for(let i=0;i<18;i++){c.beginPath();c.moveTo(-22+(i*7)%17,-44+i*2.4);c.lineTo(20-(i*11)%18,-45+i*2.4);c.stroke();}
+      c.fillStyle='#b99357';for(const x of [-22,16]){c.fillRect(x,-47,6,47);c.fillStyle='#2d2720';for(const y of [-42,-7])c.fillRect(x+2,y,2,2);c.fillStyle='#b99357';}
+      c.fillStyle='#e4b858';c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?6:14;i?c.lineTo(Math.cos(a)*r,-25+Math.sin(a)*r):c.moveTo(Math.cos(a)*r,-25+Math.sin(a)*r);}c.closePath();c.fill();
+      c.fillStyle='#4c301c';c.font='bold 7px Arial';c.textAlign='center';c.fillText('GOLD',0,-8);c.strokeStyle='#2c1b13';c.lineWidth=1.5;c.strokeRect(-25,-47,50,47);
+    }
+    return cv;
+  });
+}
+function drawStashes(g,motion){
+  for(const c of g.world.stashes){
+    if(c.x<g.cam-100||c.x>g.cam+g.viewWidth+100)continue;
+    shadow(c.x+25,c.y+49,29);ctx.drawImage(scenery.stashes[c.broken?1:0],c.x-11,c.y-13,72,69);
+    if(!c.broken){
+      if(motion){const f=(g.time*.75+c.x*.003)%1;ctx.globalAlpha=Math.sin(f*Math.PI)*.8;drawStar(c.x+43,c.y+7-f*7,3+Math.sin(f*Math.PI)*2,'#fff0b3');ctx.globalAlpha=1;}
+      if(Math.abs(g.player.x-c.x)<140)text('SMASH FOR GOLD',c.x+25,c.y-18,9,'#f7dc9d');
+    }
+  }
+}
+function drawLivingTrail(g,motion){
+  const saloon=g.world.def.bg==='bg_saloon',woods=g.chapter===7,t=motion?g.time:0;
+  if(saloon){
+    const first=Math.floor(g.cam/580);
+    for(let i=first;i<=first+2;i++){
+      const x=i*580+290,y=215+(i%2)*20;ctx.save();ctx.translate(x,y-75);ctx.rotate(Math.sin(t*1.25+i)*.035);
+      ctx.strokeStyle='#26180f';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-100);ctx.lineTo(0,75);ctx.stroke();
+      ctx.translate(0,75);ctx.drawImage(scenery.lanternGlow,-96,-93,192,192);
+      ctx.fillStyle='#3a2418';ctx.fillRect(-14,-17,28,6);ctx.fillRect(-13,17,26,5);ctx.fillStyle='#ffc572';ctx.globalAlpha=.88+Math.sin(t*7+i)*.1;ctx.fillRect(-8,-10,16,25);ctx.globalAlpha=1;ctx.strokeStyle='#442919';ctx.lineWidth=3;ctx.strokeRect(-11,-13,22,33);ctx.fillStyle='#ffe9ac';ctx.fillRect(-2,3,4,12);ctx.restore();
+    }
+  }else if(!woods){
+    const first=Math.floor(g.cam/850);
+    for(let i=first;i<=first+2;i++){
+      const x=i*850+(t*23+i*157)%700,ground=surfaceBelow(g,x,FLOOR);
+      if(ground!==FLOOR)continue;
+      shadow(x,FLOOR,16);ctx.save();ctx.translate(x,FLOOR-16-Math.abs(Math.sin(t*2+i))*3);ctx.rotate(t*1.4+i);ctx.strokeStyle='#967644bb';ctx.lineWidth=1.7;
+      for(let k=0;k<5;k++){ctx.beginPath();ctx.ellipse(0,0,17,7,k*Math.PI/5,0,Math.PI*2);ctx.stroke();}ctx.restore();
+    }
+  }
+  if(woods&&motion){ctx.fillStyle='#c8ae6a88';for(let i=0;i<8;i++){const x=g.cam+(i*173+t*18)%g.viewWidth,y=110+(i*61+t*25)%380;ctx.save();ctx.translate(x,y);ctx.rotate(t+i);ctx.beginPath();ctx.ellipse(0,0,5,2,0,0,7);ctx.fill();ctx.restore();}}
+}
+
+function prepareLanternGlow(){
+  const cv=document.createElement('canvas');cv.width=cv.height=192;const c=cv.getContext('2d');
+  const light=c.createRadialGradient(96,96,1,96,96,96);light.addColorStop(0,'#f9bc5940');light.addColorStop(1,'#f9bc5900');c.fillStyle=light;c.fillRect(0,0,192,192);return cv;
 }

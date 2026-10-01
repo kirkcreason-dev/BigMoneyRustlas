@@ -27,6 +27,16 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 
 The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
 
+## New in version 2.5
+
+- **High Noon:** combat and exploration fill a meter. Q, controller RB, or the gold HUD button unleashes five seconds of faster revolver shots and stronger, faster slaps. The burst refills the cylinder; it does not make Sugar invincible or restore his injured gun hand.
+- **24 gold stashes:** original star-stamped crate sprites, breakable with shots or the elastic hand. Each pays eight trail gold, 80 score, and 18 charge. Three per chapter reward detours onto the high road.
+- **24 optional bounties:** a new wanted-poster board tracks stash hunting, badges, streaks, returned shots, clean runs, speed, and High Noon. Each pays 20 gold once after chapter completion. Story, pause, chapter select, and results show progress.
+- **More expressive action:** enemies stagger and tumble, Sugar leans into movement and recoils from shots, landings squash and kick up dust. A 12% closer view and smooth camera look-ahead make characters easier to read; vertical tracking keeps high-platform jumps visible.
+- **A living trail:** rolling tumbleweeds, swinging saloon lanterns with warm light, and woodland leaves. Prop sprites and lantern glows are cached, with bounded effects and reduced-motion support.
+
+Old saves remain compatible. Checkpoints retain broken stashes, earned charge, and activation counts; reloading cannot reclaim stash gold or refund an active burst. Claimed bounties never pay twice.
+
 ## Refinements in version 2.4
 
 Short taps on fire, slap, and dodge are remembered for 120 ms so an almost-ready action does not swallow your input. Dodge commits to its starting direction. Readiness meters, live score/combo timing, contact rings, and chapter streak/parry totals make fights easier to read. Health packs wait until you need healing; restart asks before discarding the current run. Slap-only chapters hide gun controls and use matching instructions.
@@ -47,6 +57,7 @@ The owner-supplied CREASO·NORSE logo opens a 6.1-second studio/title sequence. 
 | Jump (hold for height) | Space / W / Up | A |
 | Shoot | J / X | X / RT |
 | Pimp hand / return projectiles | K / C | Y |
+| High Noon | Q / gold HUD button | RB |
 | Reload | R | LB |
 | Dodge | Shift | B |
 | Inspect | E | LT |
@@ -63,7 +74,7 @@ The inherited `img/` and `audio/` directories are retained as source history and
 
 ## Validation
 
-Twenty-six automated tests cover an input-only playthrough of all eight chapters with earned upgrades, platform and gap reachability, all 24 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
+Thirty-four automated tests cover an input-only playthrough of all eight chapters with earned upgrades, platform and gap reachability, all 24 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, stashes, High Noon duration and melee restrictions, bounty persistence, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
 
 ## Art and authorization
 
