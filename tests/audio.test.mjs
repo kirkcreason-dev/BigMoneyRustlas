@@ -26,7 +26,7 @@ test('unknown UI notifications stay silent; important cues and locations differ'
   assert.notEqual(soundCue('boss-tell',{attack:'high'}),soundCue('boss-tell',{attack:'volley'}));
   assert.notEqual(soundCue('impact',{weapon:'slap'}),soundCue('impact',{weapon:'bullet'}));
   assert.notEqual(soundCue('footstep',{surface:'wood'}),soundCue('footstep',{surface:'dirt'}));
-  assert.deepEqual([1,2,4,7].map(n=>soundScene(new Game(n))),['desert','town','saloon','woodland']);
+  assert.deepEqual([1,2,6,10].map(n=>soundScene(new Game(n))),['desert','town','saloon','woodland']);
 });
 
 test('slap sounds follow animation phases once, and dodging cancels future cues',()=>{

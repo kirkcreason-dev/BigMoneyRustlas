@@ -37,10 +37,10 @@ test('save and resume retain earned combo score, parry count, and defeated bosse
   const savedStreak=defaultSave();savedStreak.run=streak.snapshot();
   const resumedStreak=new Game(1,{}, {},sanitizeSave(savedStreak).run);
   assert.equal(resumedStreak.score,600);assert.equal(resumedStreak.bestCombo,3);
-  const g=new Game(3);g.damageEnemy(g.world.enemies[0],10);g.score+=150; // Secret reward.
+  const g=new Game(4);g.damageEnemy(g.world.enemies[0],10);g.score+=150; // Secret reward.
   g.world.boss.active=true;g.damageBoss(100);g.parries=3;g.checkpoint=1100;
-  const save=defaultSave();save.unlocked=3;save.run=g.snapshot();
-  const restored=new Game(3,{}, {},sanitizeSave(save).run);
+  const save=defaultSave();save.unlocked=4;save.run=g.snapshot();
+  const restored=new Game(4,{}, {},sanitizeSave(save).run);
   assert.equal(restored.score,g.score);assert.equal(restored.bestCombo,1);assert.equal(restored.parries,3);
   assert.equal(restored.world.boss.dead,true);assert.equal(restored.kills,1);
   assert.equal(restored.player.x,1100);
@@ -64,9 +64,9 @@ test('fatal damage cannot collect loot, heal at a checkpoint, or complete a chap
   }
 });
 
-test('both slap-only chapters suppress manual reload and use the correct boss instructions',()=>{
-  for(const chapter of [7,8]){const g=new Game(chapter);g.ammo=2;tick(g,{reload:true,fire:true});assert.equal(g.reload,0);assert.ok(!g.events.some(e=>e.type==='reload'||e.type==='shoot'));}
-  assert.match(new Game(8).world.signs[0].text,/pimp hand/);
+test('Sanchez training suppresses manual reload and firing',()=>{
+  for(const chapter of [10]){const g=new Game(chapter);g.ammo=2;tick(g,{reload:true,fire:true});assert.equal(g.reload,0);assert.ok(!g.events.some(e=>e.type==='reload'||e.type==='shoot'));}
+
 });
 
 test('respawn discards buffered actions and stale grounded state',()=>{

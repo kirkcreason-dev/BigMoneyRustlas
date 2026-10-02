@@ -3,7 +3,7 @@
 export const ASSETS={
   logo:'art/title-wordmark.png',studio:'art/creaso-norse.png',
   title:'art/title-frontier.png',bg_island:'art/desert.png',bg_town:'art/town.png',bg_saloon:'art/saloon.png',bg_hideout:'art/hideout.png',bg_woodland:'art/woodland.png',
-  hero:'art/sugar-wolf.png',outlaws:'art/outlaws.png',bosses:'art/bosses.png',terrain:'art/terrain.png',hack:'art/hack-benjamin.png',pimp:'art/pimp-hand.png',elastic:'art/pimp-hand-elastic.png'
+  hero:'art/sugar-wolf.png',outlaws:'art/outlaws.png',bosses:'art/bosses.png',terrain:'art/terrain.png',hack:'art/hack-benjamin.png',pimp:'art/pimp-hand.png',elastic:'art/pimp-hand-elastic.png',props:'art/frontier-props.png',secretProps:'art/frontier-secrets.png',details:'art/frontier-details.png',walk:'art/sugar-walk.png',foot:'art/the-foot.png',gunslingers:'art/gunslingers.png'
 };
 export const FRAMES={};
 function frame(name,sheet,x,y,w,h,baseFacing=1){FRAMES[name]={sheet,x,y,w,h,baseFacing};}
@@ -48,3 +48,36 @@ for(const [name,r]of Object.entries(FRAMES)){
 const terrainRects=[[30,53,713,176],[795,52,713,191],[30,301,713,160],[795,300,713,157],[30,536,713,177],[795,535,713,200],[30,777,713,188],[795,777,713,190]];
 terrainRects.forEach((r,i)=>frame('terrain'+i,'terrain',...r));
 export function backgroundUrl(name){return ASSETS[name];}
+
+// Fresh illustrated props and genuinely different animation poses.
+
+const propNames=['well','well_lit','exit','exit_locked','stash','stash_broken','coin','badge','medicine','lantern','tumbleweed','axe'];
+propNames.forEach((name,i)=>{const row=Math.floor(i/4),ys=[0,364,690],heights=[364,326,334];frame('prop_'+name,'props',i%4*384,ys[row],384,heights[row]);});
+const secretNames=['bucket','cactus','hitch','barrel','population','sign','pot','hat','piano','jar','chair','bell'];
+secretNames.forEach((name,i)=>{const row=Math.floor(i/4),ys=[0,328,647],heights=[328,319,377];frame('prop_'+name,'secretProps',i%4*384,ys[row],384,heights[row]);});
+Object.assign(FRAMES.prop_hitch,{x:755,w:410});Object.assign(FRAMES.prop_piano,{w:426});
+const detailNames=['chicken','rock','coffin','shovel','cards','watch','rope','ammo','revolver','horseshoe','spurs','glove'];
+detailNames.forEach((name,i)=>{const row=Math.floor(i/4),ys=[0,375,673],heights=[375,298,351];frame('prop_'+name,'details',i%4*384,ys[row],384,heights[row]);});
+Object.assign(FRAMES.prop_rock,{x:392,w:419});Object.assign(FRAMES.prop_revolver,{w:446});Object.assign(FRAMES.prop_spurs,{x:772,w:442});
+for(let i=0;i<6;i++)frame('sugar_walk'+i,'walk',i%3*512,Math.floor(i/3)*512,512,512);
+const footRects=[[0,0,505,510],[512,0,500,510],[1024,0,512,510],[0,512,490,512],[486,512,619,512],[1090,550,446,474]];
+['idle','step1','step2','windup','kick','recover'].forEach((name,i)=>frame('foot_'+name,'foot',...footRects[i],-1));
+frame('poot_idle','gunslingers',0,0,500,512,-1);frame('poot_fire','gunslingers',0,514,548,510,-1);
+FRAMES.poot_fire.omit=[{x:490,y:570,w:58,h:87}];
+frame('chips_idle','gunslingers',512,0,512,512,-1);frame('chips_fire','gunslingers',490,514,570,510,-1);
+FRAMES.chips_fire.omit=[{x:490,y:657,w:65,h:155},{x:1000,y:530,w:60,h:138}];
+frame('raider_idle','gunslingers',1024,0,512,512,-1);frame('raider_throw','gunslingers',1000,514,536,510,-1);
+FRAMES.raider_throw.omit=[{x:1000,y:669,w:70,h:355}];
+
+for(const [prefix,idle,fire]of [['bpoot_','poot_idle','poot_fire'],['bchips_','chips_idle','chips_fire']]){
+  for(let i=1;i<=9;i++)FRAMES[prefix+i]={...FRAMES[i>=5?fire:idle]};
+  for(let i=1;i<=5;i++)FRAMES[prefix+'gold'+i]={...FRAMES[fire]};
+}
+
+// Atlas isolation: neighboring objects can extend across nominal cell edges.
+Object.assign(FRAMES.prop_barrel,{x:1230,w:290});
+Object.assign(FRAMES.prop_jar,{x:470,w:250});
+Object.assign(FRAMES.prop_coffin,{x:850,w:260});
+Object.assign(FRAMES.prop_horseshoe,{x:456,w:300});
+Object.assign(FRAMES.prop_glove,{x:1220,w:310});
+Object.assign(FRAMES.prop_coin,{x:805,w:330});

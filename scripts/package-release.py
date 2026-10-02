@@ -14,69 +14,56 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 2.4
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 3.0
 
-Open BigMoneyRustlas.html in a modern browser to play. All images and all 46 original
-sound assets are embedded. If your browser restricts local HTML or saving, use the
-local server below. Direct local-file launching has not been browser-tested here.
+Open BigMoneyRustlas.html in a modern browser to play. Images, font and all 46 original
+sounds are embedded. If local-file saving is restricted, use the local server below.
+Direct local-file launching has not been browser-tested here.
 
 SOURCE / LOCAL SERVER
-Source contains the complete current game, art, sound, documentation, tests, and build
-scripts. Requires Node.js 20+ for development; no package install is necessary.
+Source contains the game, original art and audio, documentation, tests and build scripts.
+Requires Node.js 20+; no package install is needed.
 From Source: npm start (then open http://localhost:4173/)
              npm run check
              npm run build
-Optional: Python 3 regenerates sounds and packages ZIPs; no Python packages are needed.
+Optional: Python 3 regenerates sounds and packages ZIPs with its standard library.
 
 CONTROLS
 A/D or arrows: move. Space: jump (hold for height). J: fire. K: pimp hand.
-Shift: dodge. R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
-From chapter seven onward, Sugar uses the pimp hand instead of the injured gun hand.
+Shift: dodge. Q: High Noon (RB on controller, or tap the gold meter).
+R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
+Sanchez’s training uses the pimp hand; Sugar then learns to draw with his other hand.
 
-QUALITY UPDATE
-More forgiving action timing, committed dodge direction, slap/dodge readiness meters,
-live score and combo timing, stronger impact feedback, and streak/parry results.
-Health packs wait until needed. Checkpoint saves preserve earned score and defeated
-bosses. Restart confirmation, clearer slap-only controls, larger touch targets, and
-reduced-motion support throughout. All original artwork and your studio logo retained.
-Artwork processing scans 45 unique crops instead of 101. Optimized rendering and HUD
-updates reduce repeated work. See Source/docs/QUALITY.md for checks and measurements.
+FRONTIER EXPANSION
+12 chapters across three acts. Longer roads, more patrols, clearer story progression.
+48 discoveries, 36 gold stashes, 36 optional bounties, 36 lost sheriff badges.
+18 permanent store upgrades. 54 fresh illustrated prop and character frames.
+Six-frame walking cycle, new original masked Foot design, gunfighter Poot and Chips.
+Darker playfields, detailed wells/exits, new pickups, equipment and discovery props.
+Chips’ finale is a fast pistol duel: two hits kill, on every difficulty. Read his aim,
+dodge his rounds, and shoot during the reload. Gear and High Noon are suspended.
+Version-2 saves migrate to the expanded route; upgraded loot survives checkpoints.
+See Source/docs/FRONTIER.md and Source/docs/FRONTIER_ART.md.
 
-STUDIO INTRO
-The supplied CREASO·NORSE logo opens a six-second studio/title intro. Skip with the
-on-screen button, Enter, Space or Escape; replay from the title-screen logo or Credits.
-The logo also appears on the loading screen and in the credits. Reduced-motion mode
-uses static cards. The supplied logo is embedded unchanged in the single-file game.
-
-ORIGINAL POSTER STYLE
-Red-and-gold title lettering, cyan skies, orange desert, weathered paper menus, and
-matching original-movie costumes throughout Sugar’s movement and elastic slap poses.
-Chips wears his gold suit. Every environment and sprite sheet has a matching print finish.
-The built-in ImageGen prompts and asset notes are in Source/docs/OG_STYLE.md.
-Rye typeface is included under the SIL Open Font License (Source/fonts/OFL.txt).
-
-NEW SOUND MIX
-Layered revolver reports; mechanical reloads; timed elastic stretch, snap, recoil and
-contact; projectile ricochets; dirt/wood footsteps; distinct pickups and boss warnings.
-Original guitar/bass score changes for showdowns. Four scene ambience loops, stereo
-positioning, music ducking, and separate volume sliders. Try Settings > Test sounds.
-No film recordings, sampled songs, performer voices, or third-party audio are included.
-
-CONTENTS
-Eight chapters, four bosses, 24 secrets, checkpoints/saves, earned upgrades, original
-art and audio, source, tests, and reproducible sound-design and build scripts.
-Art and likeness notes: Source/docs/ART_AND_RIGHTS.md
-Sound details and verification: Source/docs/SOUND_DESIGN.md
+INTRO, STYLE AND SOUND
+The supplied CREASO·NORSE logo opens the skippable/replayable studio intro.
+Original poster colors and costumes remain. The studio logo is unchanged.
+46 synthesized sound assets, original adaptive guitar score, and scene ambience.
+Settings > Test music previews the game score. Effects and music have separate volumes.
+No film recordings, sampled songs, performer voices or third-party audio are included.
 Inherited unused film-image and soundtrack folders are excluded from this release.
+Rye font uses SIL Open Font License; see Source/fonts/OFL.txt.
 
 VALIDATION
-26 automated checks pass, including full-campaign playthrough and audio regressions.
-The browser mixer decoded all 46 sounds and passed signal, mute, and pause checks.
-Physical phone/controller and subjective speaker/headphone listening remain to be done.
+41 automated checks pass, including an input-only campaign playthrough, all gaps/shelves,
+all discoveries, upgrades, migration, two-hit duel restrictions and audio regressions.
+Browser checks cover sprite crops, audio output/mute/pause, and phone-sized layouts.
+Physical phone/controller testing and subjective listening remain to be done.
+Asset scope: Source/docs/ART_AND_RIGHTS.md. No independent legal clearance is claimed.
 
 REPOSITORY
-https://github.com/kirkcreason-dev/BigMoneyRustlas/pull/1
-Branch: codex/full-campaign
+https://github.com/kirkcreason-dev/BigMoneyRustlas
+Branch: codex/showdown-polish
 '''
 for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',False),('BigMoneyRustlas-Full.zip','Source',True)]:
  target=out/filename;tmp=out/(filename+'.tmp')
@@ -88,4 +75,4 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 2.4\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 3.0\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])

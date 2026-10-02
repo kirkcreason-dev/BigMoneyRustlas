@@ -7,7 +7,7 @@ const tick=(g,input={},count=1)=>{for(let i=0;i<count;i++)g.step(1/60,input);};
 const quiet=g=>{g.world.enemies=[];if(g.world.boss)g.world.boss.dead=true;return g;};
 
 test('every authored floor gap can be crossed without buying boots',()=>{
-  for(const chapter of [1,2,5,7]){
+  for(const chapter of CHAPTERS.map((_,i)=>i+1)){
     const floor=buildLevel(chapter).platforms.filter(p=>p.ground);
     for(let i=0;i<floor.length-1;i++){
       const g=quiet(new Game(chapter)); const edge=floor[i].x+floor[i].w;
@@ -22,7 +22,7 @@ test('every authored floor gap can be crossed without buying boots',()=>{
 });
 
 test('each optional shelf has a reachable jump from a lower platform',()=>{
-  for(let chapter=1;chapter<=8;chapter++){
+  for(let chapter=1;chapter<=CHAPTERS.length;chapter++){
     const platforms=buildLevel(chapter).platforms;
     for(const target of platforms.filter(p=>p.oneWay)){
       const sources=platforms.filter(p=>p.y>target.y&&p.y-target.y<245&&p.x<target.x+target.w+150&&p.x+p.w>target.x-150);
@@ -46,8 +46,8 @@ test('each optional shelf has a reachable jump from a lower platform',()=>{
   }
 });
 
-test('all 24 secrets have a standing surface, trigger once, and award score once',()=>{
-  assert.equal(SECRETS.length,24);assert.equal(new Set(SECRETS.map(s=>s.id)).size,24);
+test('all 48 secrets have a standing surface, trigger once, and award score once',()=>{
+  assert.equal(SECRETS.length,48);assert.equal(new Set(SECRETS.map(s=>s.id)).size,48);
   for(const secret of SECRETS){
     const g=quiet(new Game(secret.chapter));
     assert.ok(g.world.platforms.some(p=>p.y===secret.y&&secret.x>p.x&&secret.x<p.x+p.w),secret.id);
@@ -66,7 +66,7 @@ test('six-shot cylinder reloads automatically and firing can continue',()=>{
   assert.ok(g.events.filter(e=>e.type==='shoot').length>6);
   assert.ok(g.events.some(e=>e.type==='loaded'));
   assert.ok(g.ammo>=0&&g.ammo<=6);
-  for(const chapter of [7,8]){const training=quiet(new Game(chapter));tick(training,{fire:true},160);
+  for(const chapter of [10]){const training=quiet(new Game(chapter));tick(training,{fire:true},160);
     assert.equal(training.events.filter(e=>e.type==='shoot').length,0);}
 });
 
@@ -86,29 +86,32 @@ test('fast bullets hit narrow targets even at the slowest supported frame rate',
 });
 
 test('each boss announces attacks, recovers, and can be defeated; Chips has two phases',()=>{
-  for(const chapter of [3,4,6,8]){
+  for(const chapter of [4,6,9,12]){
     const g=new Game(chapter),b=g.world.boss;
     g.player.x=b.arena;g.player.y=100;g.player.invuln=1e5;
     const phases=new Set();
     for(let n=0;n<900;n++){g.updateBoss(1/60);phases.add(b.phase);}
     for(const phase of ['tell','attack','recover'])assert.ok(phases.has(phase),`${b.kind} ${phase}`);
     assert.ok(g.events.some(e=>e.type==='boss-tell'));
-    g.damageBoss(100);
-    if(chapter===8){assert.ok(b.enraged);assert.equal(b.dead,false);assert.equal(b.hp,24);b.flash=0;g.damageBoss(100);}
+    if(chapter===12){
+      b.phase='recover';for(let i=0;i<18;i++)g.damageBoss(1);
+      assert.ok(b.enraged);assert.equal(b.dead,false);assert.equal(b.hp,14);
+      b.flash=0;b.phase='recover';for(let i=0;i<14;i++)g.damageBoss(1);
+    }else g.damageBoss(100);
     assert.equal(b.dead,true);assert.ok(g.events.some(e=>e.type==='boss-defeated'));
   }
 });
 
 test('death restores the checkpoint and boss without duplicating collected loot',()=>{
-  const g=new Game(8);g.checkpoint=1100;g.player.x=1800;g.world.boss.active=true;
+  const g=new Game(12);g.checkpoint=1100;g.player.x=1800;g.world.boss.active=true;
   g.world.boss.hp=2;g.coins=6;g.hp=1;g.hurt(1800);assert.ok(g.dead);
   tick(g,{},56);assert.equal(g.dead,false);assert.equal(g.hp,g.maxHp);
-  assert.ok(Math.abs(g.player.x-1100)<1);assert.equal(g.world.boss.hp,30);assert.equal(g.coins,6);
+  assert.ok(Math.abs(g.player.x-1100)<1);assert.equal(g.world.boss.hp,18);assert.equal(g.coins,6);
 });
 
 test('save migration rejects invented loot and invalid checkpoints',()=>{
   const s=sanitizeSave({unlocked:99,coins:-500,items:{djump:true},secrets:['fake','deputy-bucket','deputy-bucket'],run:{chapter:1,checkpoint:999,collected:['fake']}});
-  assert.equal(s.unlocked,8);assert.equal(s.coins,0);assert.equal(s.items.boots,true);assert.equal(s.run,null);
+  assert.equal(s.unlocked,12);assert.equal(s.coins,0);assert.equal(s.items.boots,true);assert.equal(s.run,null);
   assert.deepEqual(s.secrets,['deputy-bucket']);
   const real=sanitizeSave({version:2,unlocked:1,run:{chapter:1,checkpoint:1450,time:7,collected:['p0','fake','p0'],killed:['e0','fake']}});
   assert.deepEqual(real.run.collected,['p0']);assert.deepEqual(real.run.killed,['e0']);
@@ -120,9 +123,9 @@ test('campaign rewards settle once, unlock the next chapter, and purchases canno
   for(let chapter=1;chapter<=CHAPTERS.length;chapter++){
     const g=new Game(chapter);g.complete=true;g.coins=10;g.relics=3;g.time=50;
     assert.ok(settleRun(s,g));const coins=s.coins;assert.equal(settleRun(s,g),null);assert.equal(s.coins,coins);
-    assert.equal(s.unlocked,Math.min(8,chapter+1));
+    assert.equal(s.unlocked,Math.min(CHAPTERS.length,chapter+1));
   }
-  assert.equal(s.beaten,true);assert.equal(Object.keys(s.best).length,8);
+  assert.equal(s.beaten,true);assert.equal(Object.keys(s.best).length,CHAPTERS.length);
   s.coins=100;assert.equal(purchase(s,'heart'),true);assert.equal(s.coins,0);
   assert.equal(purchase(s,'heart'),false);assert.equal(purchase(s,'boots'),false);assert.equal(purchase(s,'fake'),false);
 });

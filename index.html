@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#17130f">
-  <meta name="description" content="The first official Big Money Rustlas video game. Ride as Sugar Wolf through eight chapters of Western action, collect lost badges, and take Mud Bug back from Big Baby Chips.">
+  <meta name="description" content="The first official Big Money Rustlas video game. Ride as Sugar Wolf through twelve chapters of Western action, collect lost badges, and take Mud Bug back from Big Baby Chips.">
   <title>Big Money Rustlas — The Official Game</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
@@ -18,11 +18,11 @@
       <div class="hud-middle"><span id="chapter-label" class="eyebrow"></span><strong id="place-label"></strong><div class="trail"><i id="trail-fill"></i></div></div>
       <div class="hud-right"><span id="gold">0</span><span class="gold-icon">◈</span><button id="pause" class="icon-button" aria-label="Pause game" title="Pause (Escape)">Ⅱ</button></div>
       <div id="weapon"><div id="rounds"></div><span id="weapon-label"></span><div id="reload-track"><i id="reload-fill"></i></div></div>
-      <div id="ability-hud"><div class="ability"><span>SLAP <b id="slap-status">READY</b></span><i id="slap-fill"></i></div><div class="ability"><span>DODGE <b id="roll-status">READY</b></span><i id="roll-fill"></i></div></div>
+      <div id="ability-hud"><div class="ability"><span>SLAP <b id="slap-status">READY</b></span><i id="slap-fill"></i></div><div class="ability"><span>DODGE <b id="roll-status">READY</b></span><i id="roll-fill"></i></div><button id="noon-button" class="ability" data-tap="special" data-state="charging" disabled title="High Noon · Q / RB"><span>HIGH NOON <b id="noon-status">0%</b></span><i id="noon-fill"></i></button></div>
       <div id="score-hud"><span id="combo-label">TRAIL SCORE</span><strong id="run-score">0</strong><i id="combo-fill"></i></div>
       <div id="badges" aria-label="Lost badges collected"></div>
       <div id="boss-hud" hidden><div><span id="boss-name"></span><span id="boss-state"></span></div><div class="boss-track"><i id="boss-fill"></i></div></div>
-      <div id="control-strip"><span><kbd>A</kbd><kbd>D</kbd> Move</span><span><kbd>SPACE</kbd> Jump</span><span class="gun-control"><kbd>J</kbd> Shoot</span><span><kbd>K</kbd> Slap</span><span class="gun-control"><kbd>R</kbd> Reload</span><span><kbd>SHIFT</kbd> Dodge</span></div>
+      <div id="control-strip"><span><kbd>A</kbd><kbd>D</kbd> Move</span><span><kbd>SPACE</kbd> Jump</span><span class="gun-control"><kbd>J</kbd> Shoot</span><span><kbd>K</kbd> Slap</span><span class="gun-control"><kbd>R</kbd> Reload</span><span><kbd>SHIFT</kbd> Dodge</span><span><kbd>Q</kbd> High Noon</span></div>
     </div>
     <section id="menu" aria-label="Main menu"></section>
     <div id="toast" role="status" aria-live="polite"></div>

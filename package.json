@@ -1,9 +1,9 @@
 {
   "name": "big-money-rustlas",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "An eight-chapter Western action platformer.",
+  "description": "A twelve-chapter illustrated Western action platformer.",
   "scripts": {
     "start": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.mjs",
