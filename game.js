@@ -19,6 +19,18 @@ const atmosphere=ctx.createLinearGradient(0,0,0,HEIGHT);
 atmosphere.addColorStop(0,'#1a100608');atmosphere.addColorStop(.6,'#1a100600');atmosphere.addColorStop(1,'#1a100666');
 try { const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem('rustlas_save_v1');save=sanitizeSave(raw?JSON.parse(raw):null); } catch {storageOK=false;}
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch{if(storageOK)toast('Saving is unavailable in this browser. Keep this tab open to continue.');storageOK=false;}}
+/* jcwlunacy.net bridge: when the game runs inside the JCW Lunacy site, progress is
+   handed to the page so the site can award badges. Does nothing when played on its own. */
+function siteReport(ev,extra={}){
+  try{
+    if(window.parent===window)return;
+    const best=Object.values(save.best);
+    const summary={cleared:best.length,beaten:!!save.beaten,badges:best.reduce((n,b)=>n+(b.relics||0),0),threeStar:best.filter(b=>b.relics>=3).length,
+      clean:best.filter(b=>b.clean).length,secrets:save.secrets.length,secretsTotal:SECRETS.length,chapters:CHAPTERS.length,items:Object.values(save.items).filter(Boolean).length,itemsTotal:UPGRADES.length,gold:save.coins,
+      bosses:CHAPTERS.map((c,i)=>c.boss&&save.best[i+1]?c.boss:null).filter(Boolean)};
+    window.parent.postMessage({type:'jcw-game',game:'bmr',v:1,ev,summary,...extra},'*');
+  }catch{}
+}
 function saveRun(){if(game&&!game.complete){save.run=game.snapshot();persist();}}
 function toast(message,duration=3200){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),duration);}
 function fmtTime(n){return `${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;}
@@ -210,14 +222,14 @@ function processEvents(){
     if(e.type==='checkpoint'){saveRun();toast(e.message);}
     if(e.type==='hint'&&!game.secretPrompt)$('hint').textContent=hintText(e.text);
     if(e.type==='secret-prompt')$('hint').textContent=hintText(e.text||game.lastSign);
-    if(e.type==='secret'){if(!save.secrets.includes(e.id)){save.secrets.push(e.id);save.coins+=15;persist();}toast(`${e.name} · +15 gold. ${e.text}`,7000);}
+    if(e.type==='secret'){if(!save.secrets.includes(e.id)){save.secrets.push(e.id);save.coins+=15;persist();}toast(`${e.name} · +15 gold. ${e.text}`,7000);siteReport('secret');}
     if(e.type==='noon-ready')toast('HIGH NOON READY · Q / RB / tap the gold button');
     if(e.type==='high-noon')toast(`HIGH NOON · ${game.items.noon?'Seven':'Five'} seconds. Make them count.`,2000);
     if(e.type==='relic')toast(`Lost sheriff badge · ${game.relics} of 3 recovered`);
     if(e.type==='boss-start')toast(`${e.name.toUpperCase()} · The showdown begins`);
-    if(e.type==='boss-defeated')toast(`${e.name} is down. Ride through the exit →`);
+    if(e.type==='boss-defeated'){toast(`${e.name} is down. Ride through the exit →`);siteReport('boss',{boss:Object.keys(BOSSES).find(k=>BOSSES[k].name===e.name)||''});}
     if(e.type==='rage')toast('BIG MONEY CHIPS · This isn’t over.');
-    if(e.type==='complete'){game.result=settleRun(save,game);persist();results(game.result);}
+    if(e.type==='complete'){game.result=settleRun(save,game);persist();if(game.result)siteReport('complete',{chapter:game.chapter,final:game.chapter===CHAPTERS.length,difficulty:game.settings.difficulty,kills:game.kills,parries:game.parries,bestCombo:game.bestCombo,deaths:game.deaths,relics:game.relics});results(game.result);}
   }
   game.events=[];
 }
@@ -438,3 +450,4 @@ function prepareLanternGlow(){
   const cv=document.createElement('canvas');cv.width=cv.height=192;const c=cv.getContext('2d');
   const light=c.createRadialGradient(96,96,1,96,96,96);light.addColorStop(0,'#f9bc5940');light.addColorStop(1,'#f9bc5900');c.fillStyle=light;c.fillRect(0,0,192,192);return cv;
 }
+siteReport('hello');
