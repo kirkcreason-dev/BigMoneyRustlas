@@ -27,6 +27,12 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 
 The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
 
+## New in version 3.1
+
+Large, original brass-and-leather game buttons replace the small touch circles. Revolver, hand, spur-boot, cylinder and direction icons stay crisp at any size. Every gameplay touch target is at least 64 × 64 CSS pixels; Shoot and Jump grow to 80 × 80 on wide phones. Portrait and compact landscape layouts use two thumb clusters with separate utility controls. The playfield reserves room above the controls.
+
+High Noon has a dedicated charge button, and Shoot, Slap and Dodge show readiness directly on their buttons. Menu actions are larger too. Browser checks at 320 × 568, 390 × 844, 667 × 375 and 844 × 390 found no overlapping gameplay buttons; training still hides gun controls. See `src/controls.css`.
+
 ## New in version 3.0
 
 - Twelve chapters across three story acts. Four new routes connect Chips’ toll depot, the Hatchetman cellar, the burial road, and Sugar’s return. Older travel chapters are 2,200 units longer with more patrols and another checkpoint.
