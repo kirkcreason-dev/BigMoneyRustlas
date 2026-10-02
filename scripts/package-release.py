@@ -14,7 +14,7 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 3.0
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 3.1
 
 Open BigMoneyRustlas.html in a modern browser to play. Images, font and all 46 original
 sounds are embedded. If local-file saving is restricted, use the local server below.
@@ -32,6 +32,9 @@ CONTROLS
 A/D or arrows: move. Space: jump (hold for height). J: fire. K: pimp hand.
 Shift: dodge. Q: High Noon (RB on controller, or tap the gold meter).
 R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
+Version 3.1 adds original brass-and-leather buttons, at least 64 x 64 pixels,
+with larger Shoot/Jump controls, readiness bars, and a dedicated High Noon button.
+Portrait and landscape layouts reserve a separate control area below the playfield.
 Sanchez’s training uses the pimp hand; Sugar then learns to draw with his other hand.
 
 FRONTIER EXPANSION
@@ -63,7 +66,7 @@ Asset scope: Source/docs/ART_AND_RIGHTS.md. No independent legal clearance is cl
 
 REPOSITORY
 https://github.com/kirkcreason-dev/BigMoneyRustlas
-Branch: codex/showdown-polish
+Playable: https://kirkcreason-dev.github.io/BigMoneyRustlas/
 '''
 for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',False),('BigMoneyRustlas-Full.zip','Source',True)]:
  target=out/filename;tmp=out/(filename+'.tmp')
@@ -75,4 +78,4 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 3.0\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 3.1\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
