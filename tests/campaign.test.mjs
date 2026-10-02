@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Game,FLOOR,defaultSave,purchase,settleRun} from '../src/core.js';
+import {Game,CHAPTERS,FLOOR,defaultSave,purchase,settleRun} from '../src/core.js';
 
 // An input-only player exercises the entire campaign. It cannot change health,
 // teleport, grant gold, unlock chapters, or damage an enemy directly.
-test('the eight-chapter campaign can be completed using earned upgrades and normal inputs',()=>{
+test('the twelve-chapter campaign can be completed using earned upgrades and normal inputs',()=>{
   const save=defaultSave();
-  for(let chapter=1;chapter<=8;chapter++){
+  for(let chapter=1;chapter<=CHAPTERS.length;chapter++){
     assert.ok(chapter<=save.unlocked);
     for(const id of ['slap','heart','shield','reload'])purchase(save,id);
     const g=new Game(chapter,{difficulty:'outlaw'},save.items);
@@ -21,11 +21,19 @@ test('the eight-chapter campaign can be completed using earned upgrades and norm
         input.roll=Math.abs(dx)<150&&b.phase==='attack';
         input.down=p.y+p.h<FLOOR-5;
         input.jump=p.ground&&((b.phase==='tell'&&b.attack==='charge')||g.shots.some(s=>!s.friendly&&s.kind==='wave'&&Math.abs(s.x-p.x)<100));
+        if(g.world.def.duel){
+          input.slap=false;
+          input.move=Math.abs(dx)>800?Math.sign(dx):Math.abs(dx)<210?-Math.sign(dx):0;
+          if(!input.move&&p.dir!==Math.sign(dx))input.move=Math.sign(dx);
+          const incoming=g.shots.some(s=>!s.friendly&&Math.abs(s.x-p.x)<190&&Math.abs(s.y-(p.y+39))<85&&s.vx*(p.x-s.x)>0);
+          input.roll=incoming&&p.rollCD<=.10;
+          input.jump=b.phase==='tell'&&b.timer<.15&&p.roll<=0&&p.ground;
+        }
       }
       g.step(1/60,input);g.events=[];
     }
     assert.ok(g.complete,`Chapter ${chapter}: ${g.world.def.name}; ${g.deaths} deaths`);
     assert.ok(settleRun(save,g));assert.ok(save.coins>=0);
   }
-  assert.ok(save.beaten);assert.equal(save.unlocked,8);
+  assert.ok(save.beaten);assert.equal(save.unlocked,CHAPTERS.length);
 });

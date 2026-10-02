@@ -117,3 +117,12 @@ select{background:#f5dfb3;border:1px solid #92613a;color:#382419}.toggle{border:
 .pause-info .bounty-strip{margin-top:18px}.pause-info .bounty-line small{font-size:9px}.pause-info .bounty-line b{font:10px Arial,sans-serif;color:#6a3c20}
 @media(max-width:640px){#noon-button{width:112px;padding:6px}#noon-button span{font-size:7px}#noon-button b{font-size:6px}.bounty-board{grid-template-columns:1fr;gap:14px}.bounty-poster{padding:18px}.bounty-poster h3{font-size:23px}.story-copy .bounty-line b{font-size:10px}.story-copy .bounty-line small{font-size:9px}.bounty-line{gap:8px}.bounty-line em{font-size:8px}}
 @media(max-height:550px) and (min-width:641px){#noon-button{width:115px}.story-copy .bounty-strip{margin-bottom:6px}.story-copy .bounty-line{padding:5px 0}}
+
+/* Nightfall edition: stronger red ink, quieter paper and actual item illustrations. */
+.store-art{display:block;width:128px;height:96px;margin:0 auto 14px;object-fit:contain;filter:drop-shadow(0 5px 3px #3b201944)}
+.shop-item{background:linear-gradient(140deg,#eed4a0,#d8b37a);border-color:#713b23}.shop-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.home:before{background:linear-gradient(#100d2199,transparent 24%,#180d1822 50%,#140c0ff5 83%,#140c0f)}
+.panel-screen,.dialog,.story-copy{background:repeating-linear-gradient(0deg,#73381d08 0 1px,transparent 1px 4px),radial-gradient(ellipse at 25% 0,#e9cca0,transparent 65%),#caaa78}
+.bounty-poster,.journal-entry{background-color:#dec08d}.hud-middle strong{letter-spacing:.01em}
+@media(max-width:640px){.shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-art{width:104px;height:78px}.shop-item{min-height:300px}.shop-item h3{font-size:17px}}
+@media(max-width:360px){.shop-grid{grid-template-columns:1fr}.shop-item{min-height:0}.store-art{width:128px;height:96px}}

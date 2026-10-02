@@ -3,19 +3,19 @@ import assert from 'node:assert/strict';
 import {Game,CHAPTERS,BOUNTIES,bountyProgress,buildLevel,defaultSave,sanitizeSave,settleRun,FLOOR} from '../src/core.js';
 
 const tick=(g,n,input={})=>{for(let i=0;i<n;i++)g.step(1/60,input);};
-test('all 24 gold stashes have a standing surface and are distinct from saved pickups',()=>{
-  for(let ch=1;ch<=8;ch++){
+test('all 36 gold stashes have a standing surface and are distinct from saved pickups',()=>{
+  for(let ch=1;ch<=CHAPTERS.length;ch++){
     const w=buildLevel(ch);assert.equal(w.stashes.length,3);
     for(const c of w.stashes){assert.ok(w.platforms.some(p=>c.x>=p.x&&c.x+c.w<=p.x+p.w&&c.y+c.h===p.y));assert.ok(!w.pickups.some(p=>p.id===c.id));}
   }
 });
 test('slaps and bullets break stashes once; checkpoint reload cannot duplicate their gold',()=>{
   for(const weapon of ['slap','fire']){
-    const g=new Game(1);tick(g,30,{[weapon]:true});
+    const g=new Game(1);g.world.enemies=[];tick(g,30,{[weapon]:true});
     assert.equal(g.smashed.size,1);assert.equal(g.coins,8);assert.equal(g.score,80);assert.equal(g.noon,18);
     const save=defaultSave();save.run=g.snapshot();save.run.smashed.push('stash1','invented');
     const loaded=sanitizeSave(save);assert.deepEqual(loaded.run.smashed,['stash1']);
-    const restored=new Game(1,{}, {},loaded.run);tick(restored,30,{[weapon]:true});
+    const restored=new Game(1,{}, {},loaded.run);restored.world.enemies=[];tick(restored,30,{[weapon]:true});
     assert.equal(restored.coins,8);assert.equal(restored.score,80);assert.equal(restored.noon,18);assert.equal(restored.smashed.size,1);
   }
 });
@@ -30,7 +30,7 @@ test('High Noon requires a full earned meter and ends after five seconds without
   g.dead=true;g.noon=100;assert.equal(g.unleashNoon(),false);
 });
 test('High Noon strengthens melee without restoring Sugar’s injured gun hand',()=>{
-  for(const chapter of [7,8]){
+  for(const chapter of [10]){
     const g=new Game(chapter);g.chargeNoon(100);g.step(1/60,{special:true,fire:true,slap:true});
     assert.equal(g.noonUses,1);assert.equal(g.ammo,6);assert.equal(g.shots.length,0);assert.equal(g.player.slapCD,.36);
     const foe=g.world.enemies[0];foe.x=g.player.x+180;foe.y=FLOOR-foe.h;foe.hp=4;foe.minX=foe.x-10;foe.maxX=foe.x+200;
@@ -43,12 +43,12 @@ test('combat and exploration both charge the burst; parries retain their stronge
   tick(g,10,{slap:true});assert.equal(g.parries,1);assert.ok(g.noon>=56);assert.equal(g.shots.find(s=>s.kind==='return').damage,3);
 });
 test('enemy hit stagger delays attacks and pushes within the patrol without duplicating defeat effects',()=>{
-  const g=new Game(7),e=g.world.enemies[0];e.x=e.maxX-e.w-1;e.phase='aim';e.timer=0;
+  const g=new Game(10),e=g.world.enemies[0];e.x=e.maxX-e.w-1;e.phase='aim';e.timer=0;
   g.damageEnemy(e,1,'slap');const x=e.x;g.updateEnemy(e,1/60);assert.ok(e.x>=x);assert.ok(e.x<=e.maxX-e.w);assert.equal(g.shots.length,0);
   g.damageEnemy(e,99);g.damageEnemy(e,99);assert.equal(g.defeats.length,1);tick(g,30);assert.equal(g.defeats.length,0);
 });
 test('bounties pay once on completion, survive save migration, and require their actual goals',()=>{
-  assert.equal(BOUNTIES.length,24);assert.equal(new Set(BOUNTIES.map(b=>b.id)).size,24);
+  assert.equal(BOUNTIES.length,36);assert.equal(new Set(BOUNTIES.map(b=>b.id)).size,36);
   const save=defaultSave(),g=new Game(1);g.world.stashes.forEach(c=>g.breakStash(c));g.relics=3;g.bestCombo=3;
   assert.equal(settleRun(save,g),null);assert.equal(save.bounties.length,0);
   g.complete=true;const r=settleRun(save,g);assert.equal(r.bountyGold,60);assert.equal(r.bounties.length,3);assert.equal(settleRun(save,g),null);

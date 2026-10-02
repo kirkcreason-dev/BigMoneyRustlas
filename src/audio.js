@@ -1,11 +1,11 @@
 import { SOUND_ASSETS } from './sound-bank.js';
 
 const limit=(n,a,b)=>Math.max(a,Math.min(b,n));
-export function soundScene(game){return game?.chapter===7?'woodland':game?.world.def.bg==='bg_saloon'?'saloon':game?.world.def.bg==='bg_town'?'town':'desert';}
+export function soundScene(game){return game?.world.def.training?'woodland':game?.world.def.bg==='bg_saloon'?'saloon':game?.world.def.bg==='bg_town'?'town':'desert';}
 export function soundCue(type,data={}){
   if(type==='impact')return data.weapon==='slap'?'slap_hit':data.weapon==='stomp'?'land':'bullet_hit';
   if(type==='footstep')return `step_${data.surface==='wood'?'wood':'dirt'}${data.variant%3||0}`;
-  if(type==='enemy-shot')return data.kind==='pie'?'pie_throw':'enemy_shot';
+  if(type==='enemy-shot')return data.kind==='axe'?'pie_throw':'enemy_shot';
   if(type==='boss-tell')return data.attack==='high'?'warning_high':data.attack==='charge'?'warning_charge':'warning_low';
   return {'noon-ready':'relic','high-noon':'shield',stash:'bullet_hit',shoot:'revolver',slap:'stretch','slap-extend':'hand_snap','slap-recoil':'recoil',parry:'ricochet',reload:'reload_open',loaded:'reload_close',jump:'jump',land:'land',roll:'roll',hurt:'hurt',death:'death',coin:'coin',relic:'relic',secret:'secret',checkpoint:'checkpoint',heal:'heal',shield:'shield',slam:'slam',rage:'rage','boss-start':'warning_charge','boss-defeated':'victory',complete:'victory',buy:'coin',click:'click'}[type]||null;
 }
@@ -89,7 +89,7 @@ export class SoundEngine {
       const g=this.getGame(),scene=soundScene(g),boss=!!(g?.world.boss?.active&&!g.world.boss.dead);
       if(this.chapter!==g?.chapter){this.chapter=g?.chapter;this.musicBeat=0;}
       if(this.ambient?.name!==scene){if(this.ambient)this.stopVoice(this.ambient.voice);this.ambient={name:scene,voice:this.play('amb_'+scene,{gain:scene==='saloon'?.11:.13,loop:true})};}
-      const tempo=boss?(g.world.boss.enraged?132:118):scene==='saloon'?103:scene==='woodland'?84:92;
+      const tempo=g?.world.def.duel?156:boss?(g.world.boss.enraged?132:118):scene==='saloon'?103:scene==='woodland'?84:92;
       if(this.nextBeat<this.ctx.currentTime-.15)this.nextBeat=this.ctx.currentTime+.02;
       while(this.nextBeat<this.ctx.currentTime+.13){if(this.getSettings().music)this.score(this.musicBeat,this.nextBeat,boss,scene);this.musicBeat++;this.nextBeat+=30/tempo;}
     };
@@ -106,6 +106,12 @@ export class SoundEngine {
     if(step%4===0)note('kick',0,boss?.32:.16);
     if(step%4===2)note(scene==='saloon'||boss?'rim':'brush',0,boss?.19:.10,0,.22);
     if(boss&&step%2===1)note('brush',0,.09,0,-.22);
+  }
+  async previewMusic(){
+    await this.init();if(!this.getSettings().music||!this.ctx||!this.buffers.guitar)return false;
+    if(this.previewMusicUntil>this.ctx.currentTime)return true;
+    const t=this.ctx.currentTime+.04;this.previewMusicUntil=t+5.3;
+    for(let i=0;i<16;i++)this.score(i,t+i*30/92,false,'desert');return true;
   }
   async preview(){
     await this.init();if(!this.getSettings().sound||!this.ctx||!['revolver','hand_snap','ricochet','coin'].every(k=>this.buffers[k]))return false;

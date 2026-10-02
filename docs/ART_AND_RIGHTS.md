@@ -25,7 +25,7 @@ The 14 original game raster assets in `art/` were generated using the built-in I
 | `desert.png` | Dusty Plains | Generate: layered mesas, cactus, distant town, clear foreground. Edit: remove poles and wires. |
 | `town.png` | Mud Bug and final showdown | Generate: illustrated frontier street and timber storefronts, no people, empty gameplay space. |
 | `saloon.png` | Interior chapters | Generate: wooden bar, lamps, balcony/rafters, warm light, no people, clear foreground. |
-| `hideout.png` | Additional environment asset | Generate: original timber/stone outlaw vault, gold, warm lamps, no people. Included for future level use. |
+| `hideout.png` | Additional environment asset | Generate: original timber/stone outlaw vault, gold, warm lamps, no people. Used for Chips’ toll depot. |
 | `woodland.png` | Sanchez's training | Generate: California oak woodland, creek bed, distant shack, exaggerated wooden training arm, olive/honey palette, no people or modern utilities. |
 | `terrain.png` | Eight ground/platform pieces | Generate: 2 columns × 4 rows; sandstone, boardwalk timber, gray bedrock, reinforced stone; transparent isolated pieces with flat traversable tops. |
 | `sugar-wolf.png` | Eight movement/gun poses | Generate original atlas, then edit against authorized supplied Sugar sprite: Shaggy's Sugar Wolf face/paint, brown hat, smooth brown corduroy coat, brick-red shirt, cream paisley tie, yellow gloves. Idle, three walks, jump, shooting, slap, crouch. |
@@ -35,7 +35,7 @@ The 14 original game raster assets in `art/` were generated using the built-in I
 | `outlaws.png` | Seven enemy types and Sanchez | Generate: original concealed-face bandit, rifleman, supernatural outlaw, gambler, pie thrower, bruiser, oversized boot enemy, and original mentor silhouette. No performer likeness references. |
 | `hack-benjamin.png` | Two cameo poses | Generate from observed Rustlas costume description: black cloth face covering, broad flat black hat, glossy coat, silver floral shoulder embroidery, black gloves; idle and hat-tip poses. |
 
-The star icon, coins, wells, discovery props, interface, and effects are original vector/canvas drawings. The 46 audio assets in `sound/` are original digital synthesis from `scripts/design-sounds.py`; the guitar score and mixer are in `src/audio.js`. See `SOUND_DESIGN.md`. Generated character art is stylized interpretation, not a guarantee of exact likeness or costume continuity.
+Version 3.0 adds six built-in ImageGen atlases with 54 fresh prop/character frames; exact prompts and paths are in `FRONTIER_ART.md`. Coins, wells, exits, equipment, and discovery props now use those illustrated sprites. The star icon, interface, and temporary effects remain original vector/canvas drawings. The Foot uses the new concealed-face indigo/bronze design; no performer likeness reference was used. The 46 audio assets in `sound/` are original digital synthesis from `scripts/design-sounds.py`; the guitar score and mixer are in `src/audio.js`. See `SOUND_DESIGN.md`. Generated character art is stylized interpretation, not a guarantee of exact likeness or costume continuity.
 
 ## Font
 
@@ -43,4 +43,4 @@ Rye by Sorkin Type Co (2011), distributed under SIL Open Font License 1.1. The f
 
 ## New game material
 
-The 24 secret dialogues are original writing. References stay within the authorized fictional world; no lyrics, copied movie quotations, outside franchise jokes, or third-party band branding are included. Pie attacks, projectile-return damage, the stove shield, platforming routes, and humorous secret rewards are game inventions.
+The 48 secret dialogues are original writing. References stay within the authorized fictional world; no lyrics, copied movie quotations, outside franchise jokes, or third-party band branding are included. Axe attacks, projectile-return damage, the stove shield, platforming routes, and humorous secret rewards are game inventions.

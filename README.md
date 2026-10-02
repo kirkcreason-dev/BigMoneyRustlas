@@ -1,6 +1,6 @@
 # Big Money Rustlas — The First Official Video Game
 
-An eight-chapter illustrated Western action platformer. Play Sugar Wolf, reclaim Mud Bug, learn the pimp hand, and confront Big Baby Chips.
+A twelve-chapter illustrated Western action platformer. Play Sugar Wolf, reclaim Mud Bug, learn the pimp hand, and confront Big Baby Chips.
 
 ## Play and build
 
@@ -16,26 +16,29 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 
 - CREASO·NORSE studio intro, supplied logo on loading/title/credits screens, keyboard/touch skip and replay.
 
-- Eight authored chapters, optional elevated routes, three lost badges in each chapter, and checkpoint wells.
+- Twelve authored chapters, optional elevated routes, three lost badges in each chapter, and checkpoint wells.
 - Four boss fights with attack warnings and recovery windows. Chips has a second, enraged phase.
 - Six-shot revolver, automatic reloads, dodge rolls, variable-height jumping, elastic slaps with matching long-range hits, projectile returns, and an eight-pose pimp-hand atlas plus three supernatural extension/recoil poses.
-- 24 persistent discoveries with original dialogue, film callbacks, a Hack Benjamin cameo, and a completion reward.
-- Six permanent upgrades bought using earned gold. Three difficulty settings. Chapter replay, records, journal, save/continue, pause, and credits.
-- Original poster styling throughout: red-and-gold title, weathered paper menus, blue skies, orange desert, matching film costumes, and all 14 art sheets/backdrops.
+- 48 persistent discoveries with original dialogue, film callbacks, a Hack Benjamin cameo, and a completion reward.
+- 18 permanent upgrades bought using earned gold. Three difficulty settings. Chapter replay, records, journal, save/continue, pause, and credits.
+- Original poster styling throughout: red-and-gold title, weathered paper menus, blue skies, orange desert, matching film costumes, and 20 generated art sheets/backdrops plus the supplied studio logo.
 - 46 original sound assets, an adaptive guitar score, and scene ambience.
 - Keyboard, touch controls, and standard gamepad mappings. Reduced screen effects and separate sound/music settings.
 
 The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
 
-## New in version 2.5
+## New in version 3.0
 
-- **High Noon:** combat and exploration fill a meter. Q, controller RB, or the gold HUD button unleashes five seconds of faster revolver shots and stronger, faster slaps. The burst refills the cylinder; it does not make Sugar invincible or restore his injured gun hand.
-- **24 gold stashes:** original star-stamped crate sprites, breakable with shots or the elastic hand. Each pays eight trail gold, 80 score, and 18 charge. Three per chapter reward detours onto the high road.
-- **24 optional bounties:** a new wanted-poster board tracks stash hunting, badges, streaks, returned shots, clean runs, speed, and High Noon. Each pays 20 gold once after chapter completion. Story, pause, chapter select, and results show progress.
-- **More expressive action:** enemies stagger and tumble, Sugar leans into movement and recoils from shots, landings squash and kick up dust. A 12% closer view and smooth camera look-ahead make characters easier to read; vertical tracking keeps high-platform jumps visible.
-- **A living trail:** rolling tumbleweeds, swinging saloon lanterns with warm light, and woodland leaves. Prop sprites and lantern glows are cached, with bounded effects and reduced-motion support.
+- Twelve chapters across three story acts. Four new routes connect Chips’ toll depot, the Hatchetman cellar, the burial road, and Sugar’s return. Older travel chapters are 2,200 units longer with more patrols and another checkpoint.
+- 54 fresh illustrated frames: wells, exits, gold stashes, pickups, discovery objects, equipment, a six-frame Sugar walk cycle, the original masked Foot, and gunfighter poses for Poot and Chips. Poot uses a revolver; axe raiders replace pie throwers. Moving gunfire keeps Sugar’s legs animated.
+- 18 permanent upgrades, three times the previous store, with actual effects on ammunition, firing, movement, healing, parries, loot and High Noon. All equipment bonuses and High Noon are suspended during the final duel.
+- Chips is a fast two-hit pistol duel on every difficulty. Aim locks before the shot. Fire during his attack/reload opening, move on the warning, and dodge the incoming rounds. His second phase draws faster. Each bullet deals one hit; the elastic slap cannot damage him.
+- 48 persistent secrets with original jokes around the authorized characters and props; 36 gold stashes, 36 bounties and 36 lost badges. Three bounties per chapter pay once after completion.
+- Darker playfields, clearer act labels and chapter outcomes, cached prop sprites, and a music preview in Settings. The original synthesized guitar score remains; the inherited film recording is excluded.
 
-Old saves remain compatible. Checkpoints retain broken stashes, earned charge, and activation counts; reloading cannot reclaim stash gold or refund an active burst. Claimed bounties never pay twice.
+Version-2 saves migrate their chapter records, unlocked progress, bounties and checkpoints to the expanded route. Existing discovery IDs stay stable. Checkpoint saves retain upgraded stash payouts. The complete build and art prompts are documented in `docs/FRONTIER.md` and `docs/FRONTIER_ART.md`.
+
+The version-2.5 High Noon burst remains: earn charge through combat and exploration, then press Q, controller RB, or the gold meter for faster shots and stronger slaps. Its base duration is five seconds, seven with Long Shadow. The earlier release notes remain in `docs/SHOWDOWN.md`.
 
 ## Refinements in version 2.4
 
@@ -43,7 +46,7 @@ Short taps on fire, slap, and dodge are remembered for 120 ms so an almost-ready
 
 Checkpoint saves retain earned score, best streak, parry totals, and defeated bosses. Old version-2 saves still load. Fatal hits cannot collect a health pack, trigger a checkpoint, or finish a chapter in the same frame. Reduced-motion preferences also suppress camera shake, impact accents, and invulnerability flicker.
 
-Artwork preparation scans 45 unique crops instead of 101 aliases. Terrain and backgrounds are cached at their playfield size; canvas backing resolution is capped at 1920×1080, and the game avoids duplicate drawing between simulation steps. HUD updates are capped at 20 Hz and progress bars use transforms. Run `tests/render-browser.html` through the local server to compare all crops and measure preparation time. See `docs/QUALITY.md` for checks and limitations.
+Artwork preparation caches shared crops across animation aliases. Terrain and backgrounds are cached at their playfield size; canvas backing resolution is capped at 1920×1080, and the game avoids duplicate drawing between simulation steps. HUD updates are capped at 20 Hz and progress bars use transforms. Run `tests/render-browser.html` through the local server to compare all crops and measure preparation time. See `docs/QUALITY.md` for checks and limitations.
 
 ## Studio intro
 
@@ -74,7 +77,7 @@ The inherited `img/` and `audio/` directories are retained as source history and
 
 ## Validation
 
-Thirty-four automated tests cover an input-only playthrough of all eight chapters with earned upgrades, platform and gap reachability, all 24 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, stashes, High Noon duration and melee restrictions, bounty persistence, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
+41 automated tests cover an input-only playthrough of all twelve chapters with earned upgrades, platform and gap reachability, all 48 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, stashes, High Noon duration and melee restrictions, bounty persistence, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
 
 ## Art and authorization
 
