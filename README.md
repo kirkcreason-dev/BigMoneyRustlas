@@ -27,6 +27,12 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 
 The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
 
+## Mobile screen fix in version 3.1.1
+
+The canvas now matches the actual play area instead of forcing a 16:9 image into every phone layout. Portrait fills the available space with a closer camera; landscape shows more of the trail. Sprites keep uniform proportions. Rotation, browser chrome resizing, and touch-control changes update the canvas and camera immediately.
+
+Mobile status panels no longer overlap. Controls account for safe-area insets, compact button icons fit inside their frames, and landscape hints sit above the buttons. Existing JCW membership and badge integration remains in place.
+
 ## New in version 3.1
 
 Large, original brass-and-leather game buttons replace the small touch circles. Revolver, hand, spur-boot, cylinder and direction icons stay crisp at any size. Every gameplay touch target is at least 64 × 64 CSS pixels; Shoot and Jump grow to 80 × 80 on wide phones. Portrait and compact landscape layouts use two thumb clusters with separate utility controls. The playfield reserves room above the controls.
@@ -83,7 +89,7 @@ The inherited `img/` and `audio/` directories are retained as source history and
 
 ## Validation
 
-41 automated tests cover an input-only playthrough of all twelve chapters with earned upgrades, platform and gap reachability, all 48 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, stashes, High Noon duration and melee restrictions, bounty persistence, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
+42 automated tests cover an input-only playthrough of all twelve chapters with earned upgrades, platform and gap reachability, all 48 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, stashes, High Noon duration and melee restrictions, bounty persistence, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
 
 ## Art and authorization
 

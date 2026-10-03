@@ -79,8 +79,18 @@ test('respawn discards buffered actions and stale grounded state',()=>{
 test('canvas backing resolution stays sharp on phones and bounded on 4K/retina displays',()=>{
   assert.deepEqual(canvasSize(1280,720,1),{width:1280,height:720});
   assert.deepEqual(canvasSize(3840,2160,2),{width:1920,height:1080});
-  const phone=canvasSize(390,844,3);assert.equal(phone.width,585);assert.equal(phone.height,329);
+  const phone=canvasSize(390,844,3);assert.equal(phone.height,1080);assert.ok(Math.abs(phone.width/phone.height-390/844)<.001);
   assert.ok(canvasSize(0,0).width>0);
+});
+
+test('playfield backing follows control-dock, portrait, and rotated dimensions without letterboxing',()=>{
+  for(const [w,h] of [[769,623],[390,462],[320,206],[844,288],[667,223],[1920,1080]]){
+    const size=canvasSize(w,h,2);
+    assert.ok(size.width<=1920&&size.height<=1080);
+    assert.ok(Math.abs(size.width/size.height-w/h)<.005,`${w}x${h} aspect ratio`);
+    const logicalWidth=720*size.width/size.height,scale=size.height/720;
+    assert.ok(Math.abs(logicalWidth*scale-size.width)<1e-6,'uniform scale fills the screen');
+  }
 });
 
 test('sprite trimming retains alpha edges, honors excluded neighbors, and handles transparent cells',()=>{

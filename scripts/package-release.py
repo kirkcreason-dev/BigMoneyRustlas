@@ -14,7 +14,7 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 3.1
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 3.1.1
 
 Open BigMoneyRustlas.html in a modern browser to play. Images, font and all 46 original
 sounds are embedded. If local-file saving is restricted, use the local server below.
@@ -35,6 +35,8 @@ R: reload. E: inspect. Esc: pause. Touch controls appear automatically.
 Version 3.1 adds original brass-and-leather buttons, at least 64 x 64 pixels,
 with larger Shoot/Jump controls, readiness bars, and a dedicated High Noon button.
 Portrait and landscape layouts reserve a separate control area below the playfield.
+Version 3.1.1 fills the mobile play area, follows rotation and browser resizing,
+keeps status panels separate, and fits compact icons within their buttons.
 Sanchez’s training uses the pimp hand; Sugar then learns to draw with his other hand.
 
 FRONTIER EXPANSION
@@ -58,7 +60,7 @@ Inherited unused film-image and soundtrack folders are excluded from this releas
 Rye font uses SIL Open Font License; see Source/fonts/OFL.txt.
 
 VALIDATION
-41 automated checks pass, including an input-only campaign playthrough, all gaps/shelves,
+42 automated checks pass, including an input-only campaign playthrough, all gaps/shelves,
 all discoveries, upgrades, migration, two-hit duel restrictions and audio regressions.
 Browser checks cover sprite crops, audio output/mute/pause, and phone-sized layouts.
 Physical phone/controller testing and subjective listening remain to be done.
@@ -78,4 +80,4 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 3.1\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 3.1.1\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])

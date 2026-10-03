@@ -3,10 +3,11 @@ import { Game, BOUNTIES, bountyProgress, SLAP_DURATION, slapPose, slapReach, CHA
 
 import { SECRETS } from './src/secrets.js';
 import { ASSETS, FRAMES, backgroundUrl } from './src/assets.js';
-import { canvasSize, prepareArtwork, prepareScenery } from './src/presentation.js';
+import { canvasSize, prepareArtwork, prepareScenery } from './src/presentation.js?v=3.1.1';
 
 const $=id=>document.getElementById(id), canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const WORLD_ZOOM=1.12;
+let sceneWidth=WIDTH;
 const SAVE_KEY='rustlas_save_v2';
 let save=defaultSave(),storageOK=true,game=null,mode='loading',menuReturn='home',lastTime=0,accumulator=0,toastTimer,introTimers=[],assetsReady=false;
 const images={},crops={},spriteViews={},keys=new Set(),touchHeld=new Set(),edges={},previousPad={},holdPointers=new Map();
@@ -51,6 +52,7 @@ function show(html,nextMode){
   const playing=mode==='playing';document.body.classList.toggle('game-playing',playing);$('hud').hidden=!playing;$('touch').hidden=!playing||!(touchDevice||save.settings.touch);$('hint').hidden=!playing;
   document.body.classList.toggle('touch-mode',touchDevice||save.settings.touch);
   if(playing){audio.musicPlay();$('hint').textContent=hintText(game.secretPrompt||game.lastSign);document.body.classList.toggle('melee-only',!!(game.world.def.training||game.world.def.meleeOnly));}else{audio.pause(mode==='paused');}
+  resize();
   if(html)requestAnimationFrame(()=>{const el=$('menu').querySelector('button.primary:not(:disabled)')||$('menu').querySelector('button:not(:disabled),select,input[type=range]');el?.focus({preventScroll:true});});
 }
 function intro(){
@@ -62,7 +64,7 @@ function intro(){
 }
 function home(){
   const continuation=save.run?`CONTINUE CHAPTER ${save.run.chapter}`:save.unlocked>1&&!save.beaten?`RIDE ON · CHAPTER ${save.unlocked}`:save.beaten?'RIDE AGAIN':'START YOUR STORY';
-  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><h1><img class="title-wordmark" src="${ASSETS.logo}" alt="Big Money Rustlas"></h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Bounty board','bounties')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Twelve chapters. Four showdowns. Forty-eight dirty little secrets.'}</p><footer class="home-foot"><button class="studio-brand" data-action="intro" aria-label="Replay CREASO NORSE intro"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></button><span>KEYBOARD · CONTROLLER · TOUCH</span>${btn('Field guide','guide','text-button')}<button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V3.1</button></footer></div></div>`,'home');
+  show(`<div class="home"><header class="topbar"><div class="brand-mark"><img src="icon.svg" alt="Sheriff star"><span>BIG MONEY RUSTLAS</span></div><div class="topbar-right"><span class="official">THE FIRST OFFICIAL VIDEO GAME</span>${btn('⚙','settings','icon-button','aria-label="Settings"')}</div></header><div class="title-lockup"><h1><img class="title-wordmark" src="${ASSETS.logo}" alt="Big Money Rustlas"></h1><span class="title-kicker">THE OFFICIAL GAME</span></div><div class="home-bottom"><p class="home-tagline">A BADGE. SIX BULLETS. A TOWN TO TAKE BACK.</p><div class="button-row">${btn(`${continuation} <span aria-hidden="true">→</span>`,'continue','primary')}${btn('Chapter select','chapters')}${btn('The general store','shop')}${btn('Bounty board','bounties')}${btn('Trail secrets','journal')}</div><p class="save-label">${save.run?'Your checkpoint is waiting.':save.beaten?'Mud Bug is free. There’s still gold in those hills.':'Twelve chapters. Four showdowns. Forty-eight dirty little secrets.'}</p><footer class="home-foot"><button class="studio-brand" data-action="intro" aria-label="Replay CREASO NORSE intro"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></button><span>KEYBOARD · CONTROLLER · TOUCH</span>${btn('Field guide','guide','text-button')}<button class="text-button" data-action="credits" style="padding:0;font-size:9px">CREDITS / V3.1.1</button></footer></div></div>`,'home');
 }
 function chapters(){
   const completed=Object.keys(save.best).length,badges=Object.values(save.best).reduce((n,b)=>n+b.relics,0);
@@ -74,7 +76,7 @@ function story(chapter){
   show(`<div class="story-screen"><div class="story-art" style="background-image:url('${backgroundUrl(c.bg)}')"><span class="chapter-stamp">CHAPTER ${String(chapter).padStart(2,'0')}</span><canvas class="story-portrait" data-portrait="${portrait}" width="480" height="600" aria-label="${c.boss?BOSSES[c.boss].name:c.training?'Sanchez':'Sugar Wolf'}"></canvas></div><div class="story-copy"><span class="eyebrow">${c.act}<br>${c.place} / ${c.boss?'WANTED DEAD OR DEFEATED':'THE STORY SO FAR'}</span><h2>${c.name}</h2><div class="story-quote">“${c.quote}”</div><p>${c.story}</p><div class="mission"><b>YOUR MISSION</b>${c.objective}</div>${bountyStrip(chapter)}<div class="button-row">${btn('Saddle up →',`start:${chapter}`,'primary')}${btn('← Chapters','chapters','text-button')}</div><p class="tiny" style="margin-bottom:0">${DIFFICULTIES[save.settings.difficulty].name.toUpperCase()} · 3 LOST BADGES · CHECKPOINTS SAVE AUTOMATICALLY</p></div></div>`,'story');
 }
 function start(chapter,resume=false){
-  audio.init();game=new Game(chapter,save.settings,save.items,resume?save.run:null);game.viewWidth=WIDTH/WORLD_ZOOM;save.run=game.snapshot();persist();hudCache={};for(const secret of game.secrets)secret.found=save.secrets.includes(secret.id);
+  audio.init();game=new Game(chapter,save.settings,save.items,resume?save.run:null);game.viewWidth=sceneWidth/WORLD_ZOOM;save.run=game.snapshot();persist();hudCache={};for(const secret of game.secrets)secret.found=save.secrets.includes(secret.id);
   show('','playing');$('hint').textContent='';updateHud();toast(resume?'Back in the saddle.':`Chapter ${chapter} · ${CHAPTERS[chapter-1].name}`);lastTime=performance.now();
 }
 function resume(){show('','playing');lastTime=performance.now();}
@@ -105,7 +107,7 @@ function ending(){
   show(`<div class="center-screen ending"><div class="dialog"><span class="eyebrow">MUD BUG IS FREE</span><h2>Some legends<br>run in the family.</h2><p>Chips falls. Beneath the gold and the paint is Grizzly Wolf—Sugar’s own father. The truth lands harder than any bullet. But the badge still means something.</p><p>With the town free and the road quiet, Sugar Wolf rides into the sunset. Mud Bug will remember its sheriff.</p><div class="story-quote">“A town worth saving. A story worth telling.”</div><div class="credits">BIG MONEY RUSTLAS<br>THE FIRST OFFICIAL VIDEO GAME<br><br>You completed all twelve chapters. Return to the trail to find all 36 lost badges and set new records.</div><div class="button-row">${btn('Back to the trail','chapters','primary')}${btn('Credits','credits')}</div></div></div>`,'ending');
 }
 function credits(){
-  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits-studio"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></div><div class="credits">A CREASO·NORSE GAME<br><br>FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>Original poster styling, illustrated worlds, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>Rye typeface © Sorkin Type Co · SIL Open Font License.<br>48 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Twelve-chapter campaign · Version 3.1<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${btn('Replay intro','intro')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
+  show(`<div class="center-screen"><div class="dialog"><span class="eyebrow">THE FIRST OFFICIAL VIDEO GAME</span><h2>Big Money Rustlas</h2><p>Sugar Wolf’s story, from the dusty road to the last showdown in Mud Bug.</p><div class="credits-studio"><img src="${ASSETS.studio}" alt="CREASO·NORSE" width="444" height="90"></div><div class="credits">A CREASO·NORSE GAME<br><br>FEATURING<br>Sugar Wolf · Big Baby Chips · Dirty Sanchez<br>Raw Stank · Dusty Poot · Tank · Hack Benjamin<br><br>BASED ON BIG MONEY RUSTLAS<br>Licensed title and fictional characters.<br>Original poster styling, illustrated worlds, and character animation.<br>Sugar Wolf · Shaggy 2 Dope<br>Big Baby Chips · Violent J<br>Hack Benjamin · Jumpsteady<br>Other characters use original covered-face designs.<br>Original sound design and adaptive guitar score.<br>Rye typeface © Sorkin Type Co · SIL Open Font License.<br>48 frontier secrets, movie callbacks, and original encounters.<br><br>GAME EDITION<br>Twelve-chapter campaign · Version 3.1.1<br><br>Thanks for riding with us.</div><div class="button-row">${btn('Main menu','home','primary')}${btn('Replay intro','intro')}${save.beaten?btn('Chapter select','chapters'):''}</div></div></div>`,'credits');
 }
 function journal(){
   const all=save.secrets.length===SECRETS.length;
@@ -248,12 +250,12 @@ function drawStar(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();for(let i=0;i
 function drawPlatforms(g){
   const w=g.world;const row=g.world.def.training?2:w.def.bg==='bg_saloon'?1:w.def.bg==='bg_hideout'?3:w.def.bg==='bg_town'?1:0;
   for(const p of w.platforms){
-    if(p.x+p.w<g.cam-60||p.x>g.cam+WIDTH+60)continue;
+    if(p.x+p.w<g.cam-60||p.x>g.cam+g.viewWidth+60)continue;
     const name='terrain'+(row*2+(p.oneWay?1:0)),im=scenery.tiles[name];
     if(!p.oneWay){ctx.fillStyle=['#4d321d','#291d14','#363537','#25201c'][row];ctx.fillRect(p.x,p.y,p.w,p.h);}
     if(im){const h=im.height,tileW=im.width;ctx.save();ctx.beginPath();ctx.rect(p.x,p.y-5,p.w,p.oneWay?80:p.h+5);ctx.clip();
       const start=p.x+Math.floor(Math.max(0,g.cam-p.x)/tileW)*tileW;
-      for(let x=start;x<Math.min(p.x+p.w,g.cam+WIDTH+tileW);x+=tileW-1)ctx.drawImage(im,x,p.y-3,tileW,h);
+      for(let x=start;x<Math.min(p.x+p.w,g.cam+g.viewWidth+tileW);x+=tileW-1)ctx.drawImage(im,x,p.y-3,tileW,h);
       ctx.restore();
     }
   }
@@ -261,18 +263,18 @@ function drawPlatforms(g){
 function drawWell(x,y,active){shadow(x,y,53);sprite(active?'prop_well_lit':'prop_well',x,y+4,166);}
 
 function drawWorld(g){
-  const w=g.world,t=g.time,bg=scenery.backgrounds[w.def.bg],motion=effectsEnabled();ctx.fillStyle='#19120e';ctx.fillRect(0,0,WIDTH,HEIGHT);
-  if(bg){const bh=HEIGHT,bw=bg.width/bg.height*bh,off=-(g.cam*.23)%bw;for(let x=off-bw;x<WIDTH;x+=bw)ctx.drawImage(bg,x,0,bw,bh);}
-  if(g.world.def.training){ctx.fillStyle='#57738626';ctx.fillRect(0,0,WIDTH,HEIGHT);}if(g.world.def.bg==='bg_hideout'){ctx.fillStyle='#20162050';ctx.fillRect(0,0,WIDTH,HEIGHT);}
-  ctx.fillStyle=w.def.duel?'#190e24aa':w.def.bg==='bg_saloon'?'#140c2355':w.def.bg==='bg_town'?'#10172777':'#17203644';ctx.fillRect(0,0,WIDTH,HEIGHT);
-  ctx.fillStyle=atmosphere;ctx.fillRect(0,0,WIDTH,HEIGHT);
+  const w=g.world,t=g.time,bg=scenery.backgrounds[w.def.bg],motion=effectsEnabled();ctx.fillStyle='#19120e';ctx.fillRect(0,0,sceneWidth,HEIGHT);
+  if(bg){const bh=HEIGHT,bw=bg.width/bg.height*bh,off=-(g.cam*.23)%bw;for(let x=off-bw;x<sceneWidth;x+=bw)ctx.drawImage(bg,x,0,bw,bh);}
+  if(g.world.def.training){ctx.fillStyle='#57738626';ctx.fillRect(0,0,sceneWidth,HEIGHT);}if(g.world.def.bg==='bg_hideout'){ctx.fillStyle='#20162050';ctx.fillRect(0,0,sceneWidth,HEIGHT);}
+  ctx.fillStyle=w.def.duel?'#190e24aa':w.def.bg==='bg_saloon'?'#140c2355':w.def.bg==='bg_town'?'#10172777':'#17203644';ctx.fillRect(0,0,sceneWidth,HEIGHT);
+  ctx.fillStyle=atmosphere;ctx.fillRect(0,0,sceneWidth,HEIGHT);
   const shake=motion&&g.shake>0?(Math.random()-.5)*g.shake*32:0;ctx.save();ctx.translate(shake,FLOOR*(1-WORLD_ZOOM)-g.camY*WORLD_ZOOM+shake*.4);ctx.scale(WORLD_ZOOM,WORLD_ZOOM);ctx.translate(-Math.round(g.cam),0);
   drawPlatforms(g);
   drawLivingTrail(g,motion);
   drawSecrets(g);
   drawStashes(g,motion);
   for(const c of w.checkpoints){
-    if(c.x<g.cam-90||c.x>g.cam+WIDTH+90)continue;
+    if(c.x<g.cam-90||c.x>g.cam+g.viewWidth+90)continue;
     drawWell(c.x+25,FLOOR,c.hit);
     text(c.hit?'CHECKPOINT SAVED':'REST & SAVE',c.x+25,FLOOR-185,10,c.hit?'#f8db93':'#e8d8ba');
     if(c.hit){ctx.globalAlpha=.2+.1*Math.sin(t*3);ctx.strokeStyle='#eac777';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(c.x+25,FLOOR-3,58,12,0,0,7);ctx.stroke();ctx.globalAlpha=1;}
@@ -283,7 +285,7 @@ function drawWorld(g){
   for(const c of w.pickups){if(c.got||c.x<g.cam-50||c.x>g.cam+g.viewWidth+50)continue;const bob=motion?Math.sin(t*3+c.x)*4:0;
     sprite(c.type==='coin'?'prop_coin':c.type==='relic'?'prop_badge':'prop_medicine',c.x,c.y+bob+15,c.type==='relic'?37:c.type==='heart'?35:26);
   }
-  for(const e of w.enemies){if(e.dead||e.x<g.cam-130||e.x>g.cam+WIDTH+130)continue;shadow(e.x+e.w/2,surfaceBelow(g,e.x+e.w/2,e.y+e.h),25);const bob=e.attack==='walk'?Math.sin(e.t*10)*2:0;
+  for(const e of w.enemies){if(e.dead||e.x<g.cam-130||e.x>g.cam+g.viewWidth+130)continue;shadow(e.x+e.w/2,surfaceBelow(g,e.x+e.w/2,e.y+e.h),25);const bob=e.attack==='walk'?Math.sin(e.t*10)*2:0;
     ctx.save();const ex=e.x+e.w/2,ey=e.y+e.h+bob;ctx.translate(ex,ey);if(motion&&e.stagger>0)ctx.rotate(Math.sign(e.knock)*e.stagger*.55);sprite(e.kind==='foot'?(e.phase==='dash'?'foot_kick':e.phase==='aim'?'foot_windup':e.phase==='recover'?'foot_recover':Math.abs(e.vx)>0?'foot_step'+(1+Math.floor(e.t*7)%2):'foot_idle'):e.kind==='pie'?(e.phase==='aim'?'raider_throw':'raider_idle'):e.img,0,0,e.h+24,e.dir<0,e.flash>0?.68:1);ctx.restore();
     if(e.phase==='aim'){text('!',e.x+e.w/2,e.y-37,27,'#ffcb65');ctx.strokeStyle='#ffc96f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x+e.w/2,e.y-47,17,0,7);ctx.stroke();}
     if(e.hp<e.maxHp){ctx.fillStyle='#33251b';ctx.fillRect(e.x,e.y-20,e.w,3);ctx.fillStyle='#e0a667';ctx.fillRect(e.x,e.y-20,e.w*e.hp/e.maxHp,3);}
@@ -348,21 +350,32 @@ function drawWorld(g){
     for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(Math.cos(a)*(radius+5),Math.sin(a)*(radius+5));ctx.lineTo(Math.cos(a)*(radius+17),Math.sin(a)*(radius+17));ctx.stroke();}ctx.restore();
   }
   for(const f of g.texts){ctx.globalAlpha=Math.min(1,f.life*2);text(f.text,f.x,f.y,12,f.color);}ctx.globalAlpha=1;ctx.restore();
-  if(motion&&g.hurtFlash>0){ctx.strokeStyle=`rgba(176,48,26,${g.hurtFlash*.9})`;ctx.lineWidth=22;ctx.strokeRect(0,0,WIDTH,HEIGHT);}
-  if(g.dead){ctx.fillStyle='#160c08aa';ctx.fillRect(0,0,WIDTH,HEIGHT);text('BACK IN THE SADDLE…',WIDTH/2,HEIGHT/2,30,'#efd4a1','center','Rye');}
+  if(motion&&g.hurtFlash>0){ctx.strokeStyle=`rgba(176,48,26,${g.hurtFlash*.9})`;ctx.lineWidth=22;ctx.strokeRect(0,0,sceneWidth,HEIGHT);}
+  if(g.dead){ctx.fillStyle='#160c08aa';ctx.fillRect(0,0,sceneWidth,HEIGHT);text('BACK IN THE SADDLE…',sceneWidth/2,HEIGHT/2,30,'#efd4a1','center','Rye');}
   // Fine dust drifts at a fixed cost, away from the combat silhouette.
-  if(motion){ctx.fillStyle='#f4dbad55';for(let i=0;i<14;i++){const x=(i*107+t*12)%WIDTH,y=170+(i*59)%270+Math.sin(t+i)*5;ctx.fillRect(x,y,2,2);}}
+  if(motion){ctx.fillStyle='#f4dbad55';for(let i=0;i<14;i++){const x=(i*107+t*12)%sceneWidth,y=170+(i*59)%270+Math.sin(t+i)*5;ctx.fillRect(x,y,2,2);}}
 }
 function render(){
-  ctx.setTransform(canvas.width/WIDTH,0,0,canvas.height/HEIGHT,0,0);ctx.imageSmoothingEnabled=true;
-  if(game)drawWorld(game);else{ctx.fillStyle='#17130f';ctx.fillRect(0,0,WIDTH,HEIGHT);}
+  const scale=canvas.height/HEIGHT;
+  ctx.setTransform(scale,0,0,scale,0,0);ctx.imageSmoothingEnabled=true;
+  if(game)drawWorld(game);else{ctx.fillStyle='#17130f';ctx.fillRect(0,0,sceneWidth,HEIGHT);}
 }
 function resize(){
-  const size=canvasSize(innerWidth,innerHeight,devicePixelRatio||1);
-  if(canvas.width!==size.width||canvas.height!==size.height){canvas.width=size.width;canvas.height=size.height;}
+  const bounds=canvas.getBoundingClientRect();
+  const size=canvasSize(bounds.width,bounds.height,devicePixelRatio||1);
+  const changed=canvas.width!==size.width||canvas.height!==size.height;
+  if(changed){canvas.width=size.width;canvas.height=size.height;}
+  sceneWidth=HEIGHT*canvas.width/canvas.height;
+  if(game){
+    game.viewWidth=sceneWidth/WORLD_ZOOM;
+    // Keep Sugar on screen immediately after rotation or a control-layout change.
+    if(changed)game.cam=clamp(game.player.x-game.viewWidth*.35+game.player.vx*.18,0,Math.max(0,game.world.length-game.viewWidth));
+  }
   render();
 }
 addEventListener('resize',resize);
+new ResizeObserver(resize).observe(canvas);
+window.visualViewport?.addEventListener('resize',resize);
 function frame(now){
   const delta=Math.min((now-lastTime)/1000,.1);lastTime=now;
   if(mode==='playing'&&game){
@@ -393,7 +406,7 @@ loadAssets();
 
 function drawSecrets(g){
   for(const s of g.secrets){
-    if(s.x<g.cam-80||s.x>g.cam+WIDTH+80)continue;ctx.save();ctx.translate(s.x,s.y);
+    if(s.x<g.cam-80||s.x>g.cam+g.viewWidth+80)continue;ctx.save();ctx.translate(s.x,s.y);
     if(s.kind==='hack'){sprite(s.found?'hack_tip':'hack_idle',0,0,133,g.player.x<s.x);text('HACK BENJAMIN',0,-150,10,'#e8cf96');}
     else{const name=({paper:'sign',crate:'stash',jail:'coffin'})[s.kind]||s.kind;
       const size=({bucket:42,cactus:80,hitch:85,barrel:67,population:124,sign:89,pot:45,hat:57,piano:96,jar:40,chair:88,bell:100,chicken:45,rock:37,coffin:98,cards:40,watch:42,rope:44,shovel:90,stash:51})[name]||60;
