@@ -7,19 +7,21 @@ function wav(buffer){const frames=buffer.length,channels=buffer.numberOfChannels
 document.querySelector('#run').onclick=async()=>{
  document.querySelector('#run').disabled=true;out.textContent='Rendering…';
  try{
-  for(const scenario of ['effects and score','muted','paused']){
+  for(const scenario of ['theme only','effects and theme','muted','paused']){
    const ctx=new OfflineAudioContext(2,24000*7,24000),settings=defaultSave().settings;
    if(scenario==='muted'){settings.sound=false;settings.music=false;}
    const engine=new SoundEngine(()=>settings,()=>new Game(1),()=>false,()=>ctx);await engine.init();
    if(engine.failed.length)throw Error('Missing assets: '+engine.failed.join(', '));
-   await engine.preview();for(let i=0;i<20;i++)engine.score(i,.3+i*.326,false,'desert');
+   if(!engine.buffers.theme||engine.buffers.theme.duration<120)throw Error('Supplied theme did not decode');
+   if(scenario!=='theme only')await engine.preview();
+   if(scenario==='muted')engine.play('theme',{bus:'music',dry:true,gain:.85,duration:6});else await engine.previewMusic();
    if(scenario==='paused')engine.pause(true);
    const rendered=await ctx.startRendering(),stats=measure(rendered);
-   if(scenario==='effects and score'){
+   if(scenario==='effects and theme'||scenario==='theme only'){
     if(!(stats.peak>.05&&stats.peak<.98&&stats.rms>.001))throw Error('Invalid output level '+JSON.stringify(stats));
     const player=document.createElement('audio');player.controls=true;player.src=URL.createObjectURL(wav(rendered));document.querySelector('#preview').append(player);
    }else if(stats.peak>.00001)throw Error(scenario+' leaked audio: '+stats.peak);
-   out.textContent+='\nPASS: '+scenario+'; 46 assets decoded; peak '+stats.peak.toFixed(4)+'; RMS '+stats.rms.toFixed(4);
+   out.textContent+='\nPASS: '+scenario+'; 46 effects plus theme.m4a decoded; peak '+stats.peak.toFixed(4)+'; RMS '+stats.rms.toFixed(4);
   }
   out.textContent+='\nAll browser audio checks passed.';
  }catch(e){out.textContent+='\nFAIL: '+e.message;}finally{document.querySelector('#run').disabled=false;}

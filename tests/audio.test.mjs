@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {SOUND_ASSETS} from '../src/sound-bank.js';
-import {soundCue,soundScene} from '../src/audio.js';
+import {SoundEngine,soundCue,soundScene} from '../src/audio.js';
+import {THEME_ASSET} from '../src/music.js';
 import {Game,defaultSave,sanitizeSave} from '../src/core.js';
 
 test('all sound assets are valid, non-silent PCM with headroom and smooth boundaries',()=>{
@@ -54,4 +55,34 @@ test('footsteps need movement on a surface; volume settings preserve silence and
   assert.equal(sanitizeSave({settings:{soundVolume:Infinity}}).settings.soundVolume,defaultSave().settings.soundVolume);
   assert.equal(sanitizeSave({settings:{soundVolume:900,musicVolume:-5}}).settings.soundVolume,100);
   assert.equal(sanitizeSave({settings:{soundVolume:900,musicVolume:-5}}).settings.musicVolume,0);
+});
+
+
+test('the selected theme is the supplied M4A recording',()=>{
+  assert.equal(THEME_ASSET,'audio/theme.m4a');
+  const data=fs.readFileSync(new URL('../'+THEME_ASSET,import.meta.url));
+  assert.equal(data.toString('ascii',4,8),'ftyp');
+  assert.ok(data.length>1_000_000,'full recording is present');
+});
+
+test('theme loops alone, resumes from its paused position, and obeys music volume',()=>{
+  const settings=defaultSave().settings,sources=[];
+  const param=()=>({value:0,cancelScheduledValues(){},setTargetAtTime(v){this.value=v;},setValueAtTime(v){this.value=v;},linearRampToValueAtTime(v){this.value=v;}});
+  const node=()=>({gain:param(),pan:param(),connect(){},disconnect(){}});
+  const ctx={currentTime:0,createGain:node,createStereoPanner:node,createBufferSource(){
+    const source={...node(),playbackRate:param(),start(...args){this.started=args;},stop(){this.stopped=true;}};sources.push(source);return source;
+  }};
+  const e=Object.assign(Object.create(SoundEngine.prototype),{ctx,buffers:{theme:{duration:125}},voices:new Set(),state:'ready',musicTimer:null,musicBeat:0,chapter:0,ambient:null,themeVoice:null,themeOffset:0,sfxBus:node(),musicBus:node(),musicVolume:node(),getSettings:()=>settings,getGame:()=>new Game(1),isPlaying:()=>true});
+  let syntheticNotes=0;e.score=()=>syntheticNotes++;
+  try{
+    e.musicPlay();e.musicPlay();
+    assert.equal(sources.length,1,'no duplicate music loop');assert.equal(syntheticNotes,0,'no guitar score over the theme');
+    assert.equal(sources[0].buffer,e.buffers.theme);assert.equal(sources[0].loop,true);assert.equal(sources[0].playbackRate.value,1);
+    ctx.currentTime=17;e.pause(true);assert.equal(e.themeOffset,17);assert.ok(sources[0].stopped);
+    e.musicPlay();assert.equal(sources[1].started[1],17,'resume from saved music position');
+    settings.music=false;e.applySettings();assert.equal(e.musicVolume.gain.value,0);assert.ok(e.sfxBus.gain.value>0,'effects remain available');
+    settings.music=true;settings.musicVolume=0;e.applySettings();assert.equal(e.musicVolume.gain.value,0);
+    settings.musicVolume=55;e.applySettings();assert.ok(e.musicVolume.gain.value>0);
+    ctx.currentTime=142;e.pause(true);assert.equal(e.themeOffset,17,'playhead wraps cleanly after a full loop');
+  }finally{e.pause(true);}
 });

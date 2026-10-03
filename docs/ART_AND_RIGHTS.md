@@ -4,9 +4,9 @@
 
 The owner described this as the first official Big Money Rustlas video game and authorized the title and fictional characters. They excluded Twiztid and other performers' likenesses, then explicitly permitted J, Shaggy, and Hack Benjamin's likenesses. These are the owner's statements; this project does not represent an independent contract or legal clearance review.
 
-The release uses newly illustrated Sugar Wolf (Shaggy 2 Dope), Big Baby Chips (Violent J), and Hack Benjamin (Jumpsteady in his covered-face Rustlas costume). Raw Stank, Dusty Poot, Tank, the other enemies, and Sanchez use original designs without recognizable performer faces. No unlicensed voice imitation, film audio, dialogue recording, soundtrack, lyrics, or third-party logo is used. The gray-beard ending callback is a prop/text gag, not a Ron Jeremy portrait.
+The release uses newly illustrated Sugar Wolf (Shaggy 2 Dope), Big Baby Chips (Violent J), and Hack Benjamin (Jumpsteady in his covered-face Rustlas costume). Raw Stank, Dusty Poot, Tank, the other enemies, and Sanchez use original designs without recognizable performer faces. No new voice imitation, dialogue recording, performer portrait, or third-party logo is added. Version 3.1.2 includes the supplied `audio/theme.m4a` at the owner’s explicit direction: “make sure to use the theme in audio its called theme.m4a.” This records the requested asset choice, not an independent assessment of recording rights. The gray-beard ending callback is a prop/text gag, not a Ron Jeremy portrait.
 
-The old supplied `img/` and `audio/` folders remain in repository history; the explicit export allowlist excludes them. The two authorized supplied sprites of Sugar and Chips were used only as appearance references when generating new art.
+The old supplied `img/` and `audio/` folders remain in repository history; the explicit export allowlist excludes their contents except the specifically selected `audio/theme.m4a`. The two authorized supplied sprites of Sugar and Chips were used only as appearance references when generating new art.
 
 ## Film research
 
