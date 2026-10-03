@@ -1,8 +1,10 @@
 // Keep expensive image work out of the animation loop. Original art stays untouched.
 export function canvasSize(width,height,dpr=1){
-  const scale=Math.min(Math.max(1,width)/1280,Math.max(1,height)/720)*Math.min(Math.max(1,dpr),1.5);
-  const bounded=Math.min(scale,1.5);
-  return {width:Math.max(1,Math.round(1280*bounded)),height:Math.max(1,Math.round(720*bounded))};
+  // Match the actual playfield, including portrait screens and the control dock.
+  // Preserve its aspect ratio while bounding GPU memory on high-DPI displays.
+  width=Math.max(1,width);height=Math.max(1,height);
+  const scale=Math.min(Math.max(1,dpr),1.5,1920/width,1080/height);
+  return {width:Math.max(1,Math.round(width*scale)),height:Math.max(1,Math.round(height*scale))};
 }
 
 export function trimFrame(pixels,width,height,frame){

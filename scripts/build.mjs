@@ -44,7 +44,7 @@ const configure='for(const [id,url]of Object.entries(ASSETS))document.documentEl
 const script=`(()=>{\n${secrets}${core}${assets}${presentation}${soundBank}${audioSource}${configure}${strip(await read('game.js'))}\n})();`;
 const icon='data:image/svg+xml;base64,'+(await readFile(path.join(root,'icon.svg'))).toString('base64');
 const fontLicense=(await read('fonts/OFL.txt')).replaceAll('--','—');
-let html=(await read('index.html')).replace('<link rel="stylesheet" href="src/controls.css">','').replace('<link rel="stylesheet" href="style.css">',`<!-- Bundled Rye font license:\n${fontLicense}\n--><style>${css}</style>`).replace('href="icon.svg"',`href="${icon}"`).replace('<script type="module" src="game.js"></script>',`<script>${script}</script>`);
+let html=(await read('index.html')).replace(/<link rel="stylesheet" href="src\/controls\.css(?:\?[^"]*)?">/,'').replace(/<link rel="stylesheet" href="style\.css(?:\?[^"]*)?">/,`<!-- Bundled Rye font license:\n${fontLicense}\n--><style>${css}</style>`).replace('href="icon.svg"',`href="${icon}"`).replace(/<script type="module" src="game\.js(?:\?[^"]*)?"><\/script>/,`<script>${script}</script>`);
 for(const [id,name]of Object.entries(ASSETS))html=html.replaceAll(`src="${name}"`,`src="${data[id]}"`);
 // The brand mark is authored in a JS template, so inline that image too.
 await writeFile(path.join(dist,'BigMoneyRustlas.html'),html.replaceAll('src="icon.svg"',`src="${icon}"`));
