@@ -22,10 +22,14 @@ Publish the contents of `dist/` for the web edition. The single HTML edition is 
 - 48 persistent discoveries with original dialogue, film callbacks, a Hack Benjamin cameo, and a completion reward.
 - 18 permanent upgrades bought using earned gold. Three difficulty settings. Chapter replay, records, journal, save/continue, pause, and credits.
 - Original poster styling throughout: red-and-gold title, weathered paper menus, blue skies, orange desert, matching film costumes, and 20 generated art sheets/backdrops plus the supplied studio logo.
-- 46 original sound assets, an adaptive guitar score, and scene ambience.
+- The supplied `audio/theme.m4a` as looping gameplay music, 46 original sound assets, and scene ambience.
 - Keyboard, touch controls, and standard gamepad mappings. Reduced screen effects and separate sound/music settings.
 
 The campaign adapts the film into an arcade route. Boss attack patterns, platform routes, side encounters, jokes, and many props are original game inventions. It is not a scene-by-scene recreation.
+
+## Theme music in version 3.1.2
+
+The owner-selected `audio/theme.m4a` is now the main gameplay music. It loops at its original speed, resumes after pausing, follows Music on/off and volume, and ducks briefly for important effects. Settings > Test music plays a preview of this exact recording. The theme is copied into the web export and embedded in the offline edition; both source/full ZIPs include the original file. The synthesized guitar score is only a fallback if the theme cannot be decoded.
 
 ## Mobile screen fix in version 3.1.1
 
@@ -85,15 +89,15 @@ Touch buttons appear automatically on touch devices, or can be enabled in Settin
 
 `src/core.js` contains browser-independent gameplay; `src/secrets.js` contains discoveries; `src/assets.js` defines sprite frames and visual assets. `game.js` handles rendering, menus, input, and saves. `src/audio.js` manages the sound mix and score; `sound/` holds 46 original WAV assets. `art/` contains the new PNG assets. `scripts/build.mjs` exports only the current game's allowlisted files.
 
-The inherited `img/` and `audio/` directories are retained as source history and are **not loaded or included in the export**. Do not use those directories as the release asset list.
+The inherited `img/` directory and other files in `audio/` are retained as source history and are **not loaded or included in the export**. The explicitly selected `audio/theme.m4a` is the sole exception. Do not use those directories as the release asset list.
 
 ## Validation
 
-42 automated tests cover an input-only playthrough of all twelve chapters with earned upgrades, platform and gap reachability, all 48 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, stashes, High Noon duration and melee restrictions, bounty persistence, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
+44 automated tests cover an input-only playthrough of all twelve chapters with earned upgrades, platform and gap reachability, all 48 secrets, ammunition/reload, parrying, elastic reach and one-hit-per-swing timing, collision, boss patterns, death/checkpoint recovery, save validation, rewards, purchases, stashes, High Noon duration and melee restrictions, bounty persistence, audio file integrity, cue timing, and volume settings. Browser review covers the illustrated title/story screens, gameplay and controls, pause/settings, clean sprite boundaries, and portrait/landscape layouts. Physical controller and real phone testing remain outstanding.
 
 ## Art and authorization
 
-See `docs/OG_STYLE.md` for the current style references and exact built-in ImageGen prompts. The bundled Rye font uses SIL OFL 1.1 (`fonts/OFL.txt`). See `docs/ART_AND_RIGHTS.md` for the asset manifest, generation directions, user-confirmed scope, and film research notes. No third-party recording, lyric, guest-performer portrait, or band logo is included in the release. See `docs/SOUND_DESIGN.md` for sound design and mix validation.
+See `docs/OG_STYLE.md` for the current style references and exact built-in ImageGen prompts. The bundled Rye font uses SIL OFL 1.1 (`fonts/OFL.txt`). See `docs/ART_AND_RIGHTS.md` for the asset manifest, generation directions, user-confirmed scope, and film research notes. The supplied theme recording is included at the owner’s explicit direction. No guest-performer portrait or band logo is added. See `docs/SOUND_DESIGN.md` for sound design and mix validation.
 
 ## Full ZIP and sound design
 

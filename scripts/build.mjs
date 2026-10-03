@@ -3,11 +3,12 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {ASSETS} from '../src/assets.js';
 import {SOUND_ASSETS} from '../src/sound-bank.js';
+import {THEME_ASSET} from '../src/music.js';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const dist=path.join(root,'dist');
 await mkdir(dist,{recursive:true});
-// Explicit allowlist: inherited portraits, film stills, and theme.m4a never ship.
+// Explicit allowlist: include the owner-selected theme; leave other inherited media out.
 for(const name of ['index.html','style.css','game.js','icon.svg','src','fonts'])await cp(path.join(root,name),path.join(dist,name),{recursive:true});
 await rm(path.join(dist,'art'),{recursive:true,force:true});
 await mkdir(path.join(dist,'art'),{recursive:true});
@@ -25,6 +26,10 @@ for(const [id,name]of Object.entries(SOUND_ASSETS)){
   await cp(path.join(root,name),path.join(dist,name));
   soundData[id]=`data:audio/wav;base64,${bytes.toString('base64')}`;
 }
+await mkdir(path.join(dist,'audio'),{recursive:true});
+const themeBytes=await readFile(path.join(root,THEME_ASSET));
+await cp(path.join(root,THEME_ASSET),path.join(dist,THEME_ASSET));
+const themeData='data:audio/mp4;base64,'+themeBytes.toString('base64');
 const read=name=>readFile(path.join(root,name),'utf8');
 const strip=code=>code.replace(/^import .*?;\s*$/gm,'').replace(/\bexport /g,'');
 const wrap=(code,names)=>`const {${names}}=(()=>{\n${strip(code)}\nreturn {${names}};})();\n`;
@@ -34,7 +39,7 @@ let assetSource=await read('src/assets.js');
 assetSource=assetSource.replace(/export const ASSETS=\{[\s\S]*?\n\};/,`export const ASSETS=${JSON.stringify(data)};`);
 const assets=wrap(assetSource,'ASSETS,FRAMES,backgroundUrl');
 const presentation=wrap(await read('src/presentation.js'),'canvasSize,trimFrame,prepareArtwork,prepareScenery');
-const soundBank=`const SOUND_ASSETS=${JSON.stringify(soundData)};\n`;
+const soundBank=`const SOUND_ASSETS=${JSON.stringify(soundData)};\nconst THEME_ASSET=${JSON.stringify(themeData)};\n`;
 const audioSource=wrap(await read('src/audio.js'),'SoundEngine,soundScene,soundCue');
 let css=(await read('style.css'))+'\n'+(await read('src/controls.css'));
 const font='data:font/ttf;base64,'+(await readFile(path.join(root,'fonts/Rye-Regular.ttf'))).toString('base64');

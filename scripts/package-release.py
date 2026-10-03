@@ -6,7 +6,7 @@ import argparse, shutil
 root=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,default=root/'dist/packages');args=parser.parse_args()
 out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
-allowed=['README.md','index.html','game.js','style.css','icon.svg','package.json','package-lock.json','.gitignore','src','scripts','tests','docs','art','sound','fonts']
+allowed=['README.md','index.html','game.js','style.css','icon.svg','package.json','package-lock.json','.gitignore','src','scripts','tests','docs','art','sound','fonts','audio/theme.m4a']
 files=[]
 for name in allowed:
  p=root/name
@@ -14,10 +14,9 @@ for name in allowed:
 html=root/'dist/BigMoneyRustlas.html'
 if not html.is_file():raise SystemExit('Run npm run build first.')
 shutil.copy2(html,out/'BigMoneyRustlas.html')
-readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 3.1.1
+readme='''BIG MONEY RUSTLAS — FULL GAME PACKAGE — VERSION 3.1.2
 
-Open BigMoneyRustlas.html in a modern browser to play. Images, font and all 46 original
-sounds are embedded. If local-file saving is restricted, use the local server below.
+Open BigMoneyRustlas.html in a modern browser to play. Images, font, all 46 original sounds and the supplied theme.m4a are embedded. If local-file saving is restricted, use the local server below.
 Direct local-file launching has not been browser-tested here.
 
 SOURCE / LOCAL SERVER
@@ -53,14 +52,15 @@ See Source/docs/FRONTIER.md and Source/docs/FRONTIER_ART.md.
 INTRO, STYLE AND SOUND
 The supplied CREASO·NORSE logo opens the skippable/replayable studio intro.
 Original poster colors and costumes remain. The studio logo is unchanged.
-46 synthesized sound assets, original adaptive guitar score, and scene ambience.
-Settings > Test music previews the game score. Effects and music have separate volumes.
-No film recordings, sampled songs, performer voices or third-party audio are included.
-Inherited unused film-image and soundtrack folders are excluded from this release.
+The supplied audio/theme.m4a plays as the looping gameplay theme.
+46 synthesized sound assets and scene ambience remain.
+Settings > Test music previews the supplied theme. Effects and music have separate volumes.
+The owner explicitly selected audio/theme.m4a for this release.
+Other inherited film-image and soundtrack files remain excluded.
 Rye font uses SIL Open Font License; see Source/fonts/OFL.txt.
 
 VALIDATION
-42 automated checks pass, including an input-only campaign playthrough, all gaps/shelves,
+44 automated checks pass, including an input-only campaign playthrough, all gaps/shelves,
 all discoveries, upgrades, migration, two-hit duel restrictions and audio regressions.
 Browser checks cover sprite crops, audio output/mute/pause, and phone-sized layouts.
 Physical phone/controller testing and subjective listening remain to be done.
@@ -77,7 +77,8 @@ for filename,prefix,full in [('BigMoneyRustlas-source.zip','BigMoneyRustlas',Fal
   for f in files:z.write(f,Path(prefix)/f.relative_to(root))
  with ZipFile(tmp) as z:
   assert z.testzip() is None
+  assert z.read(prefix+'/audio/theme.m4a')==(root/'audio/theme.m4a').read_bytes()
   assert sum(name.startswith(prefix+'/sound/') and name.endswith('.wav') for name in z.namelist())==46
  tmp.replace(target)
  print(f'{target.name}: {target.stat().st_size/1048576:.1f} MB; verified')
-(out/'START-HERE.md').write_text('# Big Money Rustlas — version 3.1.1\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])
+(out/'START-HERE.md').write_text('# Big Money Rustlas — version 3.1.2\n\n'+readme[readme.index('Open BigMoneyRustlas.html'):])

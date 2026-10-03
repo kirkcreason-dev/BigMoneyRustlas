@@ -18,7 +18,7 @@ The store has six original upgrades and twelve additions: cylinder, trigger, pen
 
 ## Music
 
-The 46 original synthesized sounds and adaptive guitar/bass score remain. The duel uses a faster rhythm. Settings offers separate Test sounds and Test music controls. The inherited `audio/theme.m4a` is excluded from the release; using that recording requires clarification of the requested track and recording permission. No soundtrack restoration is claimed.
+The 46 original synthesized sounds and adaptive guitar/bass score remain. The fallback score uses a faster rhythm in the duel. Settings offers separate Test sounds and Test music controls. In version 3.1.2 the owner explicitly selected `audio/theme.m4a`; it now plays as the looping gameplay theme and is included in the web/offline exports. The synthesized guitar score remains only as a decoding-failure fallback.
 
 ## Validation
 
